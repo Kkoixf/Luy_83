@@ -1,0 +1,3 @@
+**Requisito: [REQ-NF003 - Visualização de Feedback](/Projeto-Mão-Robótica/Requisitos/Requisitos-Não%2DFuncionais/REQ%2DNF003-%2D-Visualização-de-Feedback)**
+A leitura feita pelos sensores deve iniciar no momento determinado. Ao finalizar a leitura o deve ter som ou beep para mostrar que foi concluido.
+Após a leitura feita pelos sensores, os dados devem ser enviados ao display ou aplicativo/site em que o usuário está registrado.

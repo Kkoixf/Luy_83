@@ -1,0 +1,3 @@
+-Ter um display aonde mostre as informações obtida através do sensores que foram usados.
+-Os dados mostrado no display tem quer ser numa fonte legível para usuário visualizar o que está escrito.
+-Deve ter uma placa de som para emiti o aviso sonoro.

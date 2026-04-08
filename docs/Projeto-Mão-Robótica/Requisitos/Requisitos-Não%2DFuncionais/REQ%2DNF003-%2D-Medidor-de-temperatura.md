@@ -1,0 +1,2 @@
+-Calibragem e manutenção do sensor de temperatura.
+-Manutenção com especialista ou técnico. 

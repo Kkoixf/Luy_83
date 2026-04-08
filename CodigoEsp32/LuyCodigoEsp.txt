@@ -1,0 +1,430 @@
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+
+
+//telinha
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+
+// Placa Pwm
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+WebServer server(80);
+
+// BLE UUIDs
+
+#define SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+#define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
+
+BLECharacteristic *pRxCharacteristic;
+BLECharacteristic *pTxCharacteristic;
+
+
+// Configuração dos servos
+
+#define SERVOMIN 150
+#define SERVOMAX 580
+#define LED_PIN 2
+
+
+
+//telinha
+void atualizarDisplay(String texto, String emoji) {
+display.clearDisplay();
+display.setTextSize(1);
+display.setTextColor(WHITE);
+display.setCursor(0, 0);
+display.println(texto);
+display.setTextSize(3);
+display.setCursor(40, 30);
+display.println(emoji);
+display.display();
+
+}
+
+int p_inv(int ang) { return map(ang, 0, 180, SERVOMAX, SERVOMIN); } // Invertido
+int p_nor(int ang) { return map(ang, 0, 180, SERVOMIN, SERVOMAX); } // Normal
+
+
+void desligarServos() {
+
+  for (int ch = 0; ch < 16; ch++) {
+  pwm.setPWM(ch, 0, 4096);
+  }
+  Serial.println("Servos em repouso.");
+
+}
+
+
+
+void fecharMao() {
+
+  Serial.println("Comando: Fechar Mão (Limite Reduzido)");
+
+  for (int angle0 = 0; angle0 <= 140; angle0 += 10) {
+  int pulse0 = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
+  int pulse6 = map(angle0, 0, 180, SERVOMIN, SERVOMAX);
+
+
+  pwm.setPWM(0, 0, pulse0); pwm.setPWM(3, 0, pulse0); pwm.setPWM(13, 0, pulse0);
+  pwm.setPWM(6, 0, pulse6); pwm.setPWM(9, 0, pulse6); pwm.setPWM(12, 0, pulse6);
+  pwm.setPWM(14, 0, pulse6); pwm.setPWM(15, 0, pulse6);
+
+  if (angle0 > 60) {
+
+  int angle12 = angle0 - 60;
+  int pulse1 = map(angle12, 0, 80, SERVOMIN, map(140, 0, 180, SERVOMIN, SERVOMAX));
+  int pulse2 = map(angle12, 0, 80, SERVOMAX, map(140, 0, 180, SERVOMAX, SERVOMIN));
+
+  pwm.setPWM(1, 0, pulse1); pwm.setPWM(4, 0, pulse1);
+  pwm.setPWM(7, 0, pulse1); pwm.setPWM(10, 0, pulse1);
+  pwm.setPWM(2, 0, pulse2); pwm.setPWM(5, 0, pulse2);
+  pwm.setPWM(8, 0, pulse2); pwm.setPWM(11, 0, pulse2);
+
+}
+
+  delay(20);
+
+}
+
+  desligarServos();
+
+  atualizarDisplay("Mao Fechada", "---");
+
+}
+
+
+
+void abrirMao() {
+
+  Serial.println("Comando: Abrir Mão (Lógica Original)");
+
+  for (int angle0 = 180; angle0 >= 0; angle0 -= 10) {
+  int pulse0 = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
+  int pulse6 = map(angle0, 0, 180, SERVOMIN, SERVOMAX);
+
+// Servos da Base
+
+  pwm.setPWM(0, 0, pulse0);
+  pwm.setPWM(3, 0, pulse0);
+  pwm.setPWM(13, 0, pulse0);
+  pwm.setPWM(6, 0, pulse6);
+  pwm.setPWM(9, 0, pulse6);
+  pwm.setPWM(12, 0, pulse6);
+  pwm.setPWM(14, 0, pulse6);
+  pwm.setPWM(15, 0, pulse6);
+
+
+  if (angle0 < 120) {
+  int angle12 = angle0;
+  int pulse1 = map(angle12, 0, 120, SERVOMIN, SERVOMAX);
+  int pulse2 = map(angle12, 0, 120, SERVOMAX, SERVOMIN);
+
+  pwm.setPWM(1, 0, pulse1);
+  pwm.setPWM(4, 0, pulse1);
+  pwm.setPWM(7, 0, pulse1);
+  pwm.setPWM(10, 0, pulse1);
+
+
+
+  pwm.setPWM(2, 0, pulse2);
+  pwm.setPWM(5, 0, pulse2);
+  pwm.setPWM(8, 0, pulse2);
+  pwm.setPWM(11, 0, pulse2);
+}
+delay(20);
+}
+desligarServos();
+atualizarDisplay("Mao Aberta", "O");
+}
+
+
+
+void gestoJoinha() {
+ Serial.println("Gesto: Joinha 👍 (Seguro)");
+
+  
+  for (int angle0 = 0; angle0 <= 140; angle0 += 10) {
+    
+   
+    int p_inv_val = map(angle0, 0, 180, SERVOMAX, SERVOMIN); 
+    int p_nor_val = map(angle0, 0, 180, SERVOMIN, SERVOMAX); 
+
+    // FECHANDO OS 4 DEDOS (Base)
+    pwm.setPWM(0, 0, p_inv_val); // Mindinho
+    pwm.setPWM(3, 0, p_inv_val); // Anelar
+    pwm.setPWM(6, 0, p_nor_val); // Médio
+    pwm.setPWM(9, 0, p_nor_val); // Indicador
+
+    pwm.setPWM(13, 0, map(0, 0, 180, SERVOMAX, SERVOMIN)); 
+    pwm.setPWM(14, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
+    pwm.setPWM(15, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
+
+   
+    if (angle0 > 60) {
+      int angle12 = angle0 - 60;
+
+      int p1 = map(angle12, 0, 80, SERVOMIN, map(140, 0, 180, SERVOMIN, SERVOMAX)); 
+      int p2 = map(angle12, 0, 80, SERVOMAX, map(140, 0, 180, SERVOMAX, SERVOMIN)); 
+      
+      // Articulações do Mindinho, Anelar, Médio e Indicador
+      pwm.setPWM(1, 0, p1); pwm.setPWM(2, 0, p2); 
+      pwm.setPWM(4, 0, p1); pwm.setPWM(5, 0, p2);
+      pwm.setPWM(7, 0, p1); pwm.setPWM(8, 0, p2);
+      pwm.setPWM(10, 0, p1); pwm.setPWM(11, 0, p2);
+    }
+    delay(20);
+  }
+
+  delay(1000); 
+  desligarServos();
+}
+
+void nao() {
+
+ atualizarDisplay("nao!", "OK");
+  Serial.println("Gesto: nao");
+
+  for (int angle0 = 0; angle0 <= 140; angle0 += 10) {
+  int p_inv_val = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
+  int p_nor_val = map(angle0, 0, 180, SERVOMIN, SERVOMAX);
+
+// FECHANDO OS 4 DEDOS (Base)
+
+  pwm.setPWM(0, 0, p_inv_val); // Mindinho
+  pwm.setPWM(3, 0, p_inv_val); // Anelar
+  pwm.setPWM(6, 0, p_nor_val); // Médio
+  // pwm.setPWM(13, 0, p_inv_val);
+  pwm.setPWM(14, 0, p_nor_val); 
+  pwm.setPWM(15, 0, p_nor_val);
+
+// MANTENDO O INDICADOR ABERTO
+  pwm.setPWM(9, 0, map(0, 0, 180, SERVOMIN, SERVOMAX)); // Indicador
+ 
+  if (angle0 > 60) {
+  int angle12 = angle0 - 60; 
+
+// Mapeamento reduzido para as pontas não forçarem o plástico
+
+  int p1 = map(angle12, 0, 80, SERVOMIN, map(140, 0, 180, SERVOMIN, SERVOMAX));
+  int p2 = map(angle12, 0, 80, SERVOMAX, map(140, 0, 180, SERVOMAX, SERVOMIN));
+  int p3 = map(35, 0, 180, SERVOMIN, SERVOMAX);
+  int p0 = map(0, 0, 180, SERVOMIN, SERVOMAX);
+// Articulações do Mindinho, Anelar, Médio e Indicador
+
+
+  pwm.setPWM(1, 0, p1); pwm.setPWM(2, 0, p2);
+  pwm.setPWM(4, 0, p1); pwm.setPWM(5, 0, p2);
+  pwm.setPWM(7, 0, p1); pwm.setPWM(8, 0, p2);
+  // pwm.setPWM(13, 0, p2); //em cima cano
+  pwm.setPWM(14, 0, p1); //canto porca dedao
+  pwm.setPWM(15, 0, p1); // meio dedao
+  
+
+      pwm.setPWM(10, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
+      pwm.setPWM(11, 0, map(0, 0, 180, SERVOMAX, SERVOMIN));
+    }
+  delay(20); 
+  }
+
+  
+  for (int r = 0; r < 6; r++) {
+
+    pwm.setPWM(10, 0, map(50, 0, 180, SERVOMIN, SERVOMAX));
+    pwm.setPWM(11, 0, map(50, 0, 180, SERVOMAX, SERVOMIN));
+    delay(200); 
+    
+  
+    pwm.setPWM(10, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
+    pwm.setPWM(11, 0, map(0, 0, 180, SERVOMAX, SERVOMIN));
+    delay(200);
+  }
+
+  desligarServos();
+}
+
+void gestoVezinho() {
+ Serial.println("Gesto: Joinha 👍");
+
+  int repetitions = 1;
+
+  for (int rep = 0; rep < repetitions; rep++) {
+    for (int angle0 = 0; angle0 <= 180; angle0 += 10) {
+      int pulse0 = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
+      int pulse6 = map(angle0, 0, 180, SERVOMIN, SERVOMAX);
+
+      pwm.setPWM(0, 0, pulse0);  // Principal/ mindinho 
+      pwm.setPWM(3, 0, pulse0);  // Principal/ anelar
+  
+
+      if (angle0 > 60) { 
+        int angle12 = angle0 - 60;
+        int pulse1 = map(angle12, 0, 120, SERVOMIN, SERVOMAX);
+        int pulse2 = map(angle12, 0, 120, SERVOMAX, SERVOMIN);
+        
+        pwm.setPWM(1, 0, pulse1); //mindinho
+        pwm.setPWM(2, 0, pulse2); //mindinho
+        pwm.setPWM(4, 0, pulse1);  //anelar
+        pwm.setPWM(5, 0, pulse2);   //anelar
+        pwm.setPWM(12, 0, pulse2);  //dedao 
+        pwm.setPWM(14, 0, pulse2);
+        pwm.setPWM(13, 0, pulse2);
+
+      }
+      delay(20); 
+    } 
+    desligarServos();
+  } 
+}
+
+
+
+
+class MyCallbacks : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *pCharacteristic) {
+    String value = pCharacteristic->getValue();
+
+    if (value.length() > 0) {
+      
+      int ssidIndex = value.indexOf("SSID:");
+      int passIndex = value.indexOf(";PASS:");
+
+   
+      if (ssidIndex >= 0 && passIndex >= 0) {
+        String ssid = value.substring(ssidIndex + 5, passIndex);
+        String pass = value.substring(passIndex + 6);
+        
+        ssid.trim();
+        pass.trim();
+
+        Serial.println("--- Nova configuração recebida ---");
+        Serial.print("SSID Extraído: ["); Serial.print(ssid); Serial.println("]");
+
+        // 3. Tenta conectar
+        WiFi.begin(ssid.c_str(), pass.c_str());
+        Serial.println("Conectando WiFi...");
+
+        int timeout = 0;
+        while (WiFi.status() != WL_CONNECTED && timeout < 20) {
+          delay(500);
+          Serial.print(".");
+          timeout++;
+        }
+
+        if (WiFi.status() == WL_CONNECTED) {
+          Serial.println("\nWi-Fi conectado!");
+          Serial.print("IP: ");
+          Serial.println(WiFi.localIP());
+
+          // Inicia os serviços de rede
+          server.on("/executar", handleCommand);
+          server.begin();
+          MDNS.begin("maorobotica");
+          Serial.println("Servidor Online!");
+        } else {
+          Serial.println("\nFalha ao conectar. Verifique SSID/Senha.");
+        }
+      } else {
+        Serial.println("Formato BLE inválido! Use: SSID:nome;PASS:senha");
+      }
+    }
+  }
+};
+void handleCommand() {
+
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
+   // Permite o App conectar
+  String tipo = server.arg("tipo");
+  Serial.println("Recebido: " + tipo);
+
+  if (tipo == "abrir") abrirMao();
+  else if (tipo == "fechar") fecharMao();
+  else if (tipo == "joinha") gestoJoinha();
+  else if (tipo == "nao") nao();
+  else if (tipo == "vezinho") gestoVezinho();
+
+  else if (tipo == "Medir_Temperatura") atualizarDisplay("Lendo...", "Temp"); 
+  else if (tipo == "Medir_Oxigenacao") atualizarDisplay("Lendo...", "O2");
+  
+  server.send(200, "text/plain", "OK");
+}
+
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+
+  Wire.begin(21, 22);
+
+  // DISPLAY
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("Erro no OLED");
+  } else {
+    atualizarDisplay("Sistema", "ON");
+  }
+
+  pwm.begin();
+  pwm.setPWMFreq(50);
+  desligarServos();
+
+  // BLE
+  BLEDevice::init("MaoRobotica_Config");
+  BLEServer *pServer = BLEDevice::createServer();
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+
+  pRxCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_UUID_RX, BLECharacteristic::PROPERTY_WRITE
+  );
+  pRxCharacteristic->setCallbacks(new MyCallbacks());
+
+  pTxCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY
+  );
+
+  pService->start();
+  pServer->getAdvertising()->start();
+
+  // WIFI
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true);
+  delay(500);
+
+ 
+  Serial.println("Aguardando a conexão...");
+ 
+
+}
+  void loop() {
+
+  server.handleClient();
+  static bool connected = false;
+  if (WiFi.status() == WL_CONNECTED) {
+  digitalWrite(LED_PIN, HIGH);
+  if (!connected) {
+  Serial.print("Conectado! IP: "); Serial.println(WiFi.localIP());
+  MDNS.begin("maorobotica");
+  connected = true;
+
+}
+
+} else {
+digitalWrite(LED_PIN, (millis() / 500) % 2);
+connected = false;
+
+}
+
+}
+
