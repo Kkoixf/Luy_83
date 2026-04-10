@@ -1,0 +1,35 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Criar Conta</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Cadastro no Sistema</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <form (ngSubmit)="register()">
+        <ion-item>
+          <ion-label position="floating">Novo Usuário</ion-label>
+          <ion-input [(ngModel)]="newUsername" name="newUsername" required></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Nova Senha</ion-label>
+          <ion-input [(ngModel)]="newPassword" name="newPassword" type="password" required></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" type="submit" [disabled]="!newUsername || !newPassword" class="ion-margin-top" (click)="irParaLogin()">
+          Finalizar Cadastro
+        </ion-button>
+      </form>
+
+    </ion-card-content>
+  </ion-card>
+</ion-content>

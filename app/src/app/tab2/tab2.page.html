@@ -1,0 +1,32 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Controle Luy-83</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-text color="medium">
+    <p style="font-size: 0.8rem;">Conectado em: {{ ipEsp32 }}</p>
+  </ion-text>
+
+  <ion-grid class="ion-no-padding">
+    <ion-row>
+      <ion-col size="6" *ngFor="let item of sensores">
+        <ion-card (click)="enviarComando(item.tipo)" style="margin: 5px; text-align: center; background: #4285f4; color: white;">
+          <ion-card-content>
+            <ion-icon [name]="item.icone" style="font-size: 2rem;"></ion-icon>
+            <p style="font-weight: bold; margin-top: 5px;">{{ item.nome }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-list lines="full" style="margin-top: 10px; background: transparent;">
+    <ion-item *ngFor="let gesto of gestos" button (click)="enviarComando(gesto.tipo)">
+      <ion-icon slot="start" [name]="gesto.icone" color="primary"></ion-icon>
+      <ion-label>{{ gesto.nome }}</ion-label>
+      <ion-icon slot="end" name="chevron-forward-outline" size="small"></ion-icon>
+    </ion-item>
+  </ion-list>
+</ion-content>

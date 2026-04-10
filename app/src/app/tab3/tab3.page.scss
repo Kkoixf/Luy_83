@@ -1,0 +1,17 @@
+.paciente-card {
+  --background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
+  
+  h2 {
+    color: var(--ion-color-primary);
+    font-size: 1.1rem;
+  }
+}
+
+ion-fab {
+  margin-bottom: 50px; 
+  margin-right: 10px;
+}

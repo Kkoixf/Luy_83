@@ -1,0 +1,99 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start" *ngIf="viewMode !== 'lista'">
+      <ion-button (click)="voltar()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <ion-title>
+      {{ viewMode === 'lista' ? 'Pacientes' : (viewMode === 'cadastro' ? 'Novo Cadastro' : 'Medições') }}
+    </ion-title>
+  </ion-toolbar>
+
+  <ion-toolbar color="primary" *ngIf="viewMode === 'lista'">
+    <ion-searchbar placeholder="Buscar paciente..." (ionInput)="buscar($event)"></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  
+<div *ngIf="viewMode === 'lista'">
+  <ion-list lines="full" class="ion-padding-bottom">
+    
+    <ion-item *ngFor="let p of pacientesFiltrados" class="paciente-card">
+      
+      <ion-label (click)="verDetalhes(p)">
+        <h2><strong>{{ p.nome }}</strong></h2>
+        <p>CPF: {{ p.cpf }}</p>
+        <p>Nascimento: {{ p.dataNasc }}</p>
+      </ion-label>
+
+      <ion-button fill="clear" color="danger" slot="end" (click)="deletarPaciente(p)">
+        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+      </ion-button>
+      
+    </ion-item>
+    
+  </ion-list>
+<ion-fab vertical="bottom" horizontal="end" slot="fixed">
+  <ion-fab-button (click)="abrirCadastro()" color="danger">                
+    <ion-icon name="person-add-outline"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+</div>
+
+  <div *ngIf="viewMode === 'cadastro'" class="ion-padding">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Informações Pessoais</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item fill="outline" mode="md" class="ion-margin-bottom">
+          <ion-label position="stacked">Nome Completo</ion-label>
+          <ion-input [(ngModel)]="novoPaciente.nome" placeholder="Nome do paciente"></ion-input>
+        </ion-item>
+        
+        <ion-item fill="outline" mode="md" class="ion-margin-bottom">
+          <ion-label position="stacked">CPF</ion-label>
+          <ion-input [(ngModel)]="novoPaciente.cpf" placeholder="000.000.000-00"></ion-input>
+        </ion-item>
+
+        <ion-item fill="outline" mode="md" class="ion-margin-bottom">
+          <ion-label position="stacked">Data de Nascimento</ion-label>
+          <ion-input [(ngModel)]="novoPaciente.dataNasc" placeholder="DD/MM/AAAA"></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" (click)="salvarNovoPaciente()" class="ion-margin-top">
+          Cadastrar Paciente
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div *ngIf="viewMode === 'detalhes'">
+    <ion-card>
+      <ion-card-header class="ion-text-center">
+        <ion-card-title>{{ pacienteSelecionado?.nome }}</ion-card-title>
+        <ion-text color="medium">CPF: {{ pacienteSelecionado?.cpf }}</ion-text>
+      </ion-card-header>
+
+      <ion-card-content>
+        <ion-item fill="outline" mode="md" class="ion-margin-bottom">
+          <ion-label position="stacked">Nível oxigênio</ion-label>
+          <ion-input [value]="pacienteSelecionado?.oxigenio" placeholder="Aguardando sensor..."></ion-input>
+        </ion-item>
+
+        <ion-item fill="outline" mode="md" class="ion-margin-bottom">
+          <ion-label position="stacked">Batimentos cardíacos</ion-label>
+          <ion-input [value]="pacienteSelecionado?.batimentos" placeholder="Aguardando sensor..."></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" color="success">
+          Iniciar Nova Medição
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+</ion-content>
