@@ -130,42 +130,22 @@ export class Tab4Page implements OnInit {
   }
 
   // Deseparelhar Wifi
+async desparelhar() {
+  const host = this.ipEsp32.trim().replace('http://', '').replace('/', '');
+  const url = `http://${host}/reset_wifi`; // Rota que você deve criar no ESP32
 
-  async desemparelhar() {
-    let deviceId = "";
-    try {
-      this.isConfiguring = true;
-      this.statusConfig = "Desemparelhou a conexão";
-
-      const device await BleClient.requestDevice({
-        
-      })
+  try {
+    const response = await CapacitorHttp.get({ url });
+    if (response.status === 200) {
+      alert("Comando enviado! O ESP32 irá apagar a rede e reiniciar.");
+      // Opcional: Limpar o IP salvo no app
+      this.ipEsp32 = "";
+      await Preferences.remove({ key: 'ip_esp32' });
     }
+  } catch (err) {
+    alert("Erro ao tentar desparelhar. Verifique a conexão.");
   }
-
-      const device = await BleClient.requestDevice({
-        name: 'MaoRobotica_Config',
-        optionalServices: ["6E400001-B5A3-F393-E0A9-E50E24DCCA9E"]
-      });
-
-      deviceId = device.deviceId;
-      this.statusConfig = "Conectando...";
-      await BleClient.connect(deviceId);
-
-      this.statusConfig = "Enviando dados do Wi-Fi...";
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
 
   async salvarIP() {
     try {
