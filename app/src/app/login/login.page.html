@@ -31,6 +31,10 @@
         <ion-button expand="block" type="submit" [disabled]="!username || !password">
           Entrar
         </ion-button>
+
+        <ion-button expand="block" fill="outline" (click)="irParaRecuperarSenha()">
+          Esqueci minha senha
+        </ion-button>
       </form>
 
       <ion-button expand="block" fill="outline" (click)="irParaCadastro()">

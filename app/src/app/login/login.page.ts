@@ -34,9 +34,12 @@ export class LoginPage implements OnInit {
   }
 
   irParaCadastro() {
+    this.router.navigate(['/cadastro']);
+  }
 
-  this.router.navigate(['/cadastro']);
-}
+  irParaRecuperarSenha() {
+    this.router.navigate(['/password-recovery']);
+  }
 
   async login() {
     console.log('Tentando login com:', this.username, this.password);

@@ -20,4 +20,8 @@ export const routes: Routes = [
     path: 'cadastro',
     loadComponent: () => import('./cadastro/cadastro.page').then( m => m.CadastroPage)
   },
+  {
+    path: 'password-recovery',
+    loadComponent: () => import('./password-recovery/password-recovery.page').then( m => m.PasswordRecoveryPage)
+  },
 ];
