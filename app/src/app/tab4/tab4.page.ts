@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { 
-  IonHeader, IonToolbar, IonTitle, IonContent, 
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent,
   IonGrid, IonRow, IonCol, IonCard, IonCardContent,
-  IonItem, IonLabel, IonInput, IonButton, IonIcon, 
-  IonText, IonSpinner, IonList, IonCardHeader, IonCardTitle 
+  IonItem, IonLabel, IonInput, IonButton, IonIcon,
+  IonText, IonSpinner, IonList, IonCardHeader, IonCardTitle
 } from '@ionic/angular/standalone';
-import { BleClient } from '@capacitor-community/bluetooth-le'; 
+import { BleClient } from '@capacitor-community/bluetooth-le';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { Preferences } from '@capacitor/preferences';
-import { 
-  settingsOutline, bluetoothOutline, wifiOutline, 
+import {
+  settingsOutline, bluetoothOutline, wifiOutline,
   lockClosedOutline, globeOutline, saveOutline
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
@@ -23,18 +23,18 @@ import { CapacitorHttp, HttpResponse } from '@capacitor/core'; // Para comandos 
   styleUrls: ['tab4.page.scss'],
   standalone: true,
   imports: [
-    IonHeader, IonToolbar, IonTitle, IonContent, 
+    IonHeader, IonToolbar, IonTitle, IonContent,
     IonGrid, IonRow, IonCol, IonCard, IonCardContent,
-    IonItem, IonLabel, IonInput, IonButton, IonIcon, 
+    IonItem, IonLabel, IonInput, IonButton, IonIcon,
     IonText, IonSpinner, IonList, IonCardHeader, IonCardTitle,
     CommonModule, FormsModule
-  ],   
+  ],
 })
 export class Tab4Page implements OnInit {
 
-  ipEsp32 = "192.168.0.23"; 
-  wifiSSID = ""; 
-  wifiPASS = ""; 
+  ipEsp32 = "192.168.0.23";
+  wifiSSID = "";
+  wifiPASS = "";
   isConfiguring = false;
   statusConfig = "";
 
@@ -73,12 +73,12 @@ export class Tab4Page implements OnInit {
 
 
   async configurarNovaMao() {
-    let deviceId = ""; 
+    let deviceId = "";
     try {
       this.isConfiguring = true;
       this.statusConfig = "Procurando Mão Robótica...";
 
-      
+
       const device = await BleClient.requestDevice({
         name: 'MaoRobotica_Config',
         optionalServices: ["6E400001-B5A3-F393-E0A9-E50E24DCCA9E"]
@@ -89,21 +89,21 @@ export class Tab4Page implements OnInit {
       await BleClient.connect(deviceId);
 
       this.statusConfig = "Enviando dados do Wi-Fi...";
-      
+
       // Prepara o texto para enviar (SSID e Senha)
       const payload = `SSID:${this.wifiSSID};PASS:${this.wifiPASS}`;
       const data = new TextEncoder().encode(payload);
-      
-     
+
+
       await BleClient.write(
-        deviceId, 
-        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E", 
-        "6E400002-B5A3-F393-E0A9-E50E24DCCA9E", 
+        deviceId,
+        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E",
+        "6E400002-B5A3-F393-E0A9-E50E24DCCA9E",
         new DataView(data.buffer)
       );
-      
+
       alert("Configuração enviada com sucesso!");
-      
+
     } catch (error) {
       console.error(error);
       alert("Erro na configuração: " + error);
@@ -115,7 +115,7 @@ export class Tab4Page implements OnInit {
     }
   }
 
-  
+
   async enviarComando(tipoGesto: string) {
     const host = this.ipEsp32.trim().replace('http://', '').replace('/', '');
     const url = `http://${host}/executar?tipo=${tipoGesto}`;
@@ -128,6 +128,44 @@ export class Tab4Page implements OnInit {
       alert("Erro: Mão não respondeu no Wi-Fi.");
     }
   }
+
+  // Deseparelhar Wifi
+
+  async desemparelhar() {
+    let deviceId = "";
+    try {
+      this.isConfiguring = true;
+      this.statusConfig = "Desemparelhou a conexão";
+
+      const device await BleClient.requestDevice({
+        
+      })
+    }
+  }
+
+      const device = await BleClient.requestDevice({
+        name: 'MaoRobotica_Config',
+        optionalServices: ["6E400001-B5A3-F393-E0A9-E50E24DCCA9E"]
+      });
+
+      deviceId = device.deviceId;
+      this.statusConfig = "Conectando...";
+      await BleClient.connect(deviceId);
+
+      this.statusConfig = "Enviando dados do Wi-Fi...";
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   async salvarIP() {
     try {
