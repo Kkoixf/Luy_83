@@ -51,8 +51,28 @@
         {{ isConfiguring ? statusConfig : 'Enviar via Bluetooth' }}
       </ion-button>
 
+
+      <!--botão de desparelhar-->
+      <ion-button
+      expand="block"
+      color="light"
+      class="ion-margin-top"
+      (click)="desparelhar()"
+      [disabled]="isConfiguring"
+      slot="start"
+      name="bluetooth-outline">
+      <ion-spinner *ngif="isConfiguring" slot="start"></ion-spinner>
+      <ion-icon
+      *ngIf="!isConfiguring"
+      slot="start"
+      name="bluetooth-outline">
+      </ion-icon>
+
+      {{ isConfiguring ? statusConfig : 'Desemparelhado a conexão'}}
+      </ion-button>
+
     </ion-card-content>
-  </ion-card>
+    </ion-card>
 
   <!-- CONEXÃO DIRETA VIA WIFI -->
   <ion-card color="light">
@@ -78,7 +98,7 @@
         (click)="salvarIP()">
 
         <ion-icon slot="start" name="save-outline"></ion-icon>
-      
+
       </ion-button>
 
     </ion-card-content>
