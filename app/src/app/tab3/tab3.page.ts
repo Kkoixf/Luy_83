@@ -1,5 +1,4 @@
-import { Component } from '@angular/core';
-// Adicionei os ícones e componentes de lista/pesquisa necessários
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
   IonCard, IonCardHeader, IonCardTitle, IonCardContent,
@@ -9,8 +8,12 @@ import {
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { addIcons } from 'ionicons'; // Importante para os ícones funcionarem
-import { personAddOutline, trash, eyeOutline, arrowBackOutline, trashOutline } from 'ionicons/icons';
+import { addIcons } from 'ionicons';
+import { personAddOutline, trash, eyeOutline, arrowBackOutline, trashOutline, waterOutline, heartOutline, thermometerOutline, chevronBackOutline, chevronForwardOutline, downloadOutline } from 'ionicons/icons';
+import { AlertController } from '@ionic/angular';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-tab3',
@@ -26,28 +29,92 @@ import { personAddOutline, trash, eyeOutline, arrowBackOutline, trashOutline } f
   ],
 })
 export class Tab3Page {
+  @ViewChild('lineChart') lineChart!: ElementRef;
+  chart: any;
 
-  // Controle de tela: 'lista', 'cadastro' ou 'detalhes'
   viewMode: 'lista' | 'cadastro' | 'detalhes' = 'lista';
 
-  // Paciente sendo visualizado ou cadastrado no momento
   pacienteSelecionado: any = null;
   novoPaciente = { nome: '', cpf: '', dataNasc: '' };
 
-  // Simulação de Banco de Dados
   pacientes = [
-    { id: 1, nome: 'João da Silva', cpf: '123.456.789-00', dataNasc: '15/05/1980', oxigenio: '98%', batimentos: '75 bpm', temperatura: '37 grau' },
-    { id: 2, nome: 'Maria Oliveira', cpf: '987.654.321-11', dataNasc: '22/10/1992', oxigenio: '97%', batimentos: '80 bpm'}
+    { id: 1, 
+      nome: 'Noah Still',
+      cpf: '123.345.234-45',
+      dataNasc: '12/09/1965',
+      medicoes: [
+        { id: 101, data: '11/04/2026', oxigenio: '98%', batimentos: '72 bpm', temperatura: '36.5°C', historico: [70, 72, 71, 73, 72, 75] },
+        { id: 102, data: '11/04/2026', oxigenio: '96%', batimentos: '80 bpm', temperatura: '37.2°C', historico: [78, 80, 82, 79, 81, 80] }
+      ]
+    }
   ];
 
+  indiceMedicao = 0;
   pacientesFiltrados = [...this.pacientes];
 
-  constructor() {
-    // Registra os ícones que vamos usar na interface
-    addIcons({arrowBackOutline,trashOutline,personAddOutline,trash,eyeOutline});
+  constructor(private alertController: AlertController) {
+    addIcons({arrowBackOutline,trashOutline,personAddOutline,waterOutline,heartOutline,thermometerOutline,chevronBackOutline,chevronForwardOutline,downloadOutline,trash,eyeOutline});
   }
 
-  // --- FUNÇÕES DE LÓGICA ---
+  gerarGrafico() {
+    if (this.chart) {
+      this.chart.destroy();
+    }
+
+    const dadosMedicao = this.pacienteSelecionado?.medicoes[this.indiceMedicao];
+    
+    this.chart = new Chart(this.lineChart.nativeElement, {
+      type: 'line',
+      data: {
+        labels: ['-5s', '-4s', '-3s', '-2s', '-1s', 'Agora'],
+        datasets: [{
+          label: 'Batimentos (BPM)',
+          data: dadosMedicao?.historico || [0, 0, 0, 0, 0, 0],
+          borderColor: '#eb445a',
+          backgroundColor: 'rgba(235, 68, 90, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: false, min: 40, max: 150 }
+        }
+      }
+    });
+  }
+
+  async deletarMedicao(index: number) {
+    const alert = await this.alertController.create({
+      header: 'Confirmar exclusão',
+      message: 'Tem certeza que deseja excluir está medição?',
+      buttons:[
+        { text: 'cancelar', role: 'cancel'},
+        {
+          text: 'Excluir',
+          handler: () => {
+            this.pacienteSelecionado.medicoes.splice(index, 1);
+            if (this.indiceMedicao >= this.pacienteSelecionado.medicoes.length) { 
+              this.indiceMedicao = Math.max(0, this.pacienteSelecionado.medicoes.length - 1);
+            }
+            this.gerarGrafico();
+          }
+        }
+      ]
+    }); 
+    await alert.present();
+  }
+
+  baixarPDF(medicao: any) {
+    console.log('Baixando PDF:', medicao.data);
+  }
+
+  mudarPagina(direcao: number) {
+    this.indiceMedicao += direcao;
+    this.gerarGrafico();
+  }
 
   buscar(event: any) {
     const termo = event.target.value.toLowerCase();
@@ -63,9 +130,14 @@ export class Tab3Page {
   salvarNovoPaciente() {
     if(this.novoPaciente.nome && this.novoPaciente.cpf) {
       const id = this.pacientes.length + 1;
-      this.pacientes.push({ ...this.novoPaciente, id, oxigenio: '--', batimentos: '--' });
+      const pacienteParaAdicionar = { 
+        ...this.novoPaciente, 
+        id, 
+        medicoes: [] 
+      };
+      this.pacientes.push(pacienteParaAdicionar);
       this.pacientesFiltrados = [...this.pacientes];
-      this.novoPaciente = { nome: '', cpf: '', dataNasc: '' }; // limpa form
+      this.novoPaciente = { nome: '', cpf: '', dataNasc: '' }; 
       this.viewMode = 'lista';
     }
   }
@@ -73,6 +145,10 @@ export class Tab3Page {
   verDetalhes(paciente: any) {
     this.pacienteSelecionado = paciente;
     this.viewMode = 'detalhes';
+    this.indiceMedicao = 0;
+    setTimeout(() => {
+      this.gerarGrafico();
+    }, 200);
   }
 
   deletarPaciente(paciente: any) {

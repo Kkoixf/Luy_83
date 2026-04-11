@@ -6,6 +6,8 @@
       </ion-button>
     </ion-buttons>
 
+    <!-- Atenção, instalar npm install chart.js para ver o gráfico -->
+     <!--##################################################################-->
     <ion-title>
       {{ viewMode === 'lista' ? 'Pacientes' : (viewMode === 'cadastro' ? 'Novo Cadastro' : 'Medições') }}
     </ion-title>
@@ -18,6 +20,7 @@
 
 <ion-content [fullscreen]="true">
   
+
 <div *ngIf="viewMode === 'lista'">
   <ion-list lines="full" class="ion-padding-bottom">
     
@@ -71,29 +74,81 @@
     </ion-card>
   </div>
 
-  <div *ngIf="viewMode === 'detalhes'">
-    <ion-card>
-      <ion-card-header class="ion-text-center">
-        <ion-card-title>{{ pacienteSelecionado?.nome }}</ion-card-title>
-        <ion-text color="medium">CPF: {{ pacienteSelecionado?.cpf }}</ion-text>
-      </ion-card-header>
-
-      <ion-card-content>
-        <ion-item fill="outline" mode="md" class="ion-margin-bottom">
-          <ion-label position="stacked">Nível oxigênio</ion-label>
-          <ion-input [value]="pacienteSelecionado?.oxigenio" placeholder="Aguardando sensor..."></ion-input>
-        </ion-item>
-
-        <ion-item fill="outline" mode="md" class="ion-margin-bottom">
-          <ion-label position="stacked">Batimentos cardíacos</ion-label>
-          <ion-input [value]="pacienteSelecionado?.batimentos" placeholder="Aguardando sensor..."></ion-input>
-        </ion-item>
-
-        <ion-button expand="block" color="success">
-          Iniciar Nova Medição
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
+  
+<div *ngIf="viewMode === 'detalhes'">
+  <div class="ion-padding-horizontal ion-margin-top" style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+    <h4 style="margin-bottom: 2px;">{{ pacienteSelecionado?.nome }}</h4>
+    <p style="font-size: 0.8rem; color: #666; margin: 0;">
+      CPF: {{ pacienteSelecionado?.cpf }} | Nasc: {{ pacienteSelecionado?.dataNasc }}
+    </p>
   </div>
+
+  <ion-card *ngIf="pacienteSelecionado?.medicoes?.length > 0; else semMedicao">
+    <ion-card-header class="ion-text-center">
+      <ion-badge color="primary">Medição de {{ pacienteSelecionado.medicoes[indiceMedicao].data }}</ion-badge>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-icon name="water-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <p>Oxímetro</p>
+            <h2><strong>{{ pacienteSelecionado.medicoes[indiceMedicao].oxigenio }}</strong></h2>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="heart-outline" slot="start" color="danger"></ion-icon>
+          <ion-label>
+            <p>Batimento Cardíaco</p>
+            <h2><strong>{{ pacienteSelecionado.medicoes[indiceMedicao].batimentos }}</strong></h2>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="thermometer-outline" slot="start" color="warning"></ion-icon>
+          <ion-label>
+            <p>Temperatura</p>
+            <h2><strong>{{ pacienteSelecionado.medicoes[indiceMedicao].temperatura }}</strong></h2>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+      <div class="ion-margin-top" style="height: 200px; width: 100%;">
+        <canvas #lineChart></canvas>
+      </div>
+      <div class="ion-text-center ion-margin-top">
+        <p style="font-size: 0.9rem;">Página {{ indiceMedicao + 1 }} de {{ pacienteSelecionado.medicoes.length }}</p>
+        
+        <ion-button fill="clear" [disabled]="indiceMedicao === 0" (click)="mudarPagina(-1)">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </ion-button>
+        
+        <ion-button fill="clear" [disabled]="indiceMedicao === pacienteSelecionado.medicoes.length - 1" (click)="mudarPagina(1)">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+      </div>
+
+      <div style="display: flex; gap: 10px;" class="ion-margin-top">
+        <ion-button expand="block" fill="outline" color="danger" (click)="deletarMedicao(indiceMedicao)" style="flex: 1;">
+          <ion-icon slot="start" name="trash-outline"></ion-icon> Deletar
+        </ion-button>
+        <ion-button expand="block" fill="outline" (click)="baixarPDF(pacienteSelecionado.medicoes[indiceMedicao])" style="flex: 1;">
+          <ion-icon slot="start" name="download-outline"></ion-icon> PDF
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ng-template #semMedicao>
+    <div class="ion-padding ion-text-center">
+      <p>Nenhuma medição registrada para este paciente.</p>
+    </div>
+  </ng-template>
+
+  <div class="ion-padding">
+    <ion-button expand="block" color="success" mode="ios">
+      Iniciar Nova Medição (Luy)
+    </ion-button>
+  </div>
+</div>
 
 </ion-content>

@@ -65,3 +65,11 @@ export class EmailService {
         'https://us-central1-luy-83.cloudfunctions.net/sendCustomEmail',
         { to, subject, html }
       ).toPromise();
+      
+      return { success: true, message: 'Email enviado com sucesso!' };
+    } catch (error: any) {
+      console.error('Erro ao enviar email customizado:', error);
+      return { success: false, message: 'Erro ao processar envio de email' };
+    }
+  }
+}

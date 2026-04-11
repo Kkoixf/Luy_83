@@ -129,23 +129,24 @@ export class Tab4Page implements OnInit {
     }
   }
 
-  // Deseparelhar Wifi
+
+  // Resetar WIFI
 async desparelhar() {
   const host = this.ipEsp32.trim().replace('http://', '').replace('/', '');
-  const url = `http://${host}/reset_wifi`; // Rota que você deve criar no ESP32
-
+  const url = `http://${host}/reset_wifi`; 
   try {
     const response = await CapacitorHttp.get({ url });
     if (response.status === 200) {
       alert("Comando enviado! O ESP32 irá apagar a rede e reiniciar.");
-      // Opcional: Limpar o IP salvo no app
+      
       this.ipEsp32 = "";
       await Preferences.remove({ key: 'ip_esp32' });
     }
   } catch (err) {
-    alert("Erro ao tentar desparelhar. Verifique a conexão.");
+    alert("Erro ao tentar RESETAR. Verifique a conexão.");
   }
 }
+
 
   async salvarIP() {
     try {

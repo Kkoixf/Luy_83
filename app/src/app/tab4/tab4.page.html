@@ -52,23 +52,23 @@
       </ion-button>
 
 
-      <!--botão de desparelhar-->
+      <!--botão de resetar wifi-->
       <ion-button
       expand="block"
       color="light"
       class="ion-margin-top"
       (click)="desparelhar()"
-      [disabled]="isConfiguring"
+      [disabled]="isConfiguring">
+      <ion-spinner *ngIf="isConfiguring" slot="start"></ion-spinner>
+      <ion-icon>
       slot="start"
       name="bluetooth-outline">
-      <ion-spinner *ngif="isConfiguring" slot="start"></ion-spinner>
-      <ion-icon
       *ngIf="!isConfiguring"
       slot="start"
       name="bluetooth-outline">
       </ion-icon>
 
-      {{ isConfiguring ? statusConfig : 'Desemparelhado a conexão'}}
+      {{ isConfiguring ? statusConfig : 'Resetar Wi-Fi' }}
       </ion-button>
 
     </ion-card-content>

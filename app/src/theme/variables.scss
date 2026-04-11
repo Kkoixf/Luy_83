@@ -1,2 +1,32 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+// Custom variables para o Ionic
+:root {
+  /** primary **/
+  --ion-color-primary: #3880ff;
+  --ion-color-primary-rgb: 56, 128, 255;
+  --ion-color-primary-contrast: #141212;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #3171e0;
+  --ion-color-primary-tint: #4c8dff;
+
+  /** light (O BRANCO QUE VOCÊ QUER) **/
+  --ion-color-light: #dfd7d7;
+  --ion-color-light-rgb: 255, 255, 255;
+  --ion-color-light-contrast: #272020;
+  --ion-color-light-contrast-rgb: 0, 0, 0;
+  --ion-color-light-shade: #db4f4f;
+  --ion-color-light-tint: #181717;
+
+  /** dark **/
+  --ion-color-dark: #535353;
+  --ion-color-dark-rgb: 34, 36, 40;
+  --ion-color-dark-contrast: #3a3737;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #1e2023;
+  --ion-color-dark-tint: #383a3e;
+}
+
+/* Força o modo claro mesmo se o celular estiver no modo escuro */
+
+  
