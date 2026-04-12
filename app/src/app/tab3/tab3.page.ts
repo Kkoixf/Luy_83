@@ -43,8 +43,8 @@ export class Tab3Page {
       cpf: '123.345.234-45',
       dataNasc: '12/09/1965',
       medicoes: [
-        { id: 101, data: '11/04/2026', oxigenio: '98%', batimentos: '72 bpm', temperatura: '36.5°C', historico: [70, 72, 71, 73, 72, 75] },
-        { id: 102, data: '11/04/2026', oxigenio: '96%', batimentos: '80 bpm', temperatura: '37.2°C', historico: [78, 80, 82, 79, 81, 80] }
+        { id: 101, data: '11/04/2026', hora: '09:00', oxigenio: '98%', batimentos: '72 bpm', temperatura: '36.5°C', historico: [70, 72, 71, 73, 72, 75] },
+        { id: 102, data: '11/04/2026', hora: '10:00', oxigenio: '96%', batimentos: '80 bpm', temperatura: '37.2°C', historico: [78, 80, 82, 79, 81, 80] }
       ]
     }
   ];
@@ -159,5 +159,27 @@ export class Tab3Page {
   voltar() {
     this.viewMode = 'lista';
     this.pacienteSelecionado = null;
+  }
+formatarCpf(event: any) {
+ 
+  let valor = event.target.value.replace(/\D/g, '');
+  if (valor.length > 11) {
+    valor = valor.slice(0, 11);
+  }
+  valor = valor.replace(/^(\d{3})(\d)/, '$1.$2');
+  valor = valor.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+  valor = valor.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+  this.novoPaciente.cpf = valor;
+  }
+
+  formatoData(event: any) {
+    let valor = event.target.value.replace(/\D/g, '');
+    if (valor.length > 8) {
+      valor = valor.slice(0, 8);
+    }
+
+    valor = valor.replace(/(\d{2})(\d)/, '$1/$2');
+    valor = valor.replace(/(\d{2})(\d)/, '$1/$2');
+    this.novoPaciente.dataNasc = valor; 
   }
 }
