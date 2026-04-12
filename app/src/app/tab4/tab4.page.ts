@@ -11,7 +11,9 @@ import { FormsModule } from '@angular/forms';
 import { Preferences } from '@capacitor/preferences';
 import {
   settingsOutline, bluetoothOutline, wifiOutline,
-  lockClosedOutline, globeOutline, saveOutline
+  lockClosedOutline, globeOutline, saveOutline,
+  eyeOffOutline,
+  eyeOutline
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
@@ -35,6 +37,7 @@ export class Tab4Page implements OnInit {
   ipEsp32 = "192.168.0.23";
   wifiSSID = "";
   wifiPASS = "";
+  showPassword = false;
   isConfiguring = false;
   statusConfig = "";
 
@@ -47,9 +50,17 @@ export class Tab4Page implements OnInit {
       bluetoothOutline,
       globeOutline,
       saveOutline,
-      settingsOutline
+      settingsOutline,
+      eyeOffOutline,
+      eyeOutline
     });
   }
+
+   // Toggle para mostrar/ocultar senha 
+   togglePassword(){
+    this.showPassword = !this.showPassword;
+   }
+
 
   async ngOnInit() {
     const { value } = await Preferences.get({ key: 'ip_esp32' });

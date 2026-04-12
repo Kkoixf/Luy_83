@@ -22,16 +22,28 @@
           clearInput>
         </ion-input>
       </ion-item>
-
-      <ion-item>
+<ion-item>
         <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
         <ion-label position="stacked">Senha do Wi-Fi</ion-label>
+        
         <ion-input
-          type="password"
+          [type]="showPassword ? 'text' : 'password'"
           [(ngModel)]="wifiPASS"
           placeholder="********"
           clearInput>
         </ion-input>
+
+        <ion-button 
+          slot="end" 
+          fill="clear" 
+          (click)="togglePassword()" 
+          class="ion-no-margin"
+          style="margin-top: 15px;">
+          <ion-icon 
+            slot="icon-only" 
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'">
+          </ion-icon>
+        </ion-button>
       </ion-item>
 
       <ion-button
@@ -50,7 +62,6 @@
 
         {{ isConfiguring ? statusConfig : 'Enviar via Bluetooth' }}
       </ion-button>
-
 
       <!--botão de resetar wifi-->
       <ion-button
