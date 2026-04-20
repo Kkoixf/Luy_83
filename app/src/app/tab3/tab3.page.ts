@@ -12,6 +12,7 @@ import { addIcons } from 'ionicons';
 import { personAddOutline, trash, eyeOutline, arrowBackOutline, trashOutline, waterOutline, heartOutline, thermometerOutline, chevronBackOutline, chevronForwardOutline, downloadOutline } from 'ionicons/icons';
 import { AlertController } from '@ionic/angular';
 import { Chart, registerables } from 'chart.js';
+import { DatabaseService } from '../services/sqlite';
 
 Chart.register(...registerables);
 
@@ -37,31 +38,61 @@ export class Tab3Page {
   pacienteSelecionado: any = null;
   novoPaciente = { nome: '', cpf: '', dataNasc: '' };
 
-  pacientes = [
-    { id: 1, 
-      nome: 'Noah Still',
-      cpf: '123.345.234-45',
-      dataNasc: '12/09/1965',
-      medicoes: [
-        { id: 101, data: '11/04/2026', hora: '09:00', oxigenio: '98%', batimentos: '72 bpm', temperatura: '36.5°C', historico: [70, 72, 71, 73, 72, 75] },
-        { id: 102, data: '11/04/2026', hora: '10:00', oxigenio: '96%', batimentos: '80 bpm', temperatura: '37.2°C', historico: [78, 80, 82, 79, 81, 80] }
-      ]
-    }
-  ];
+  // Lista local para exibição
+  pacientes: any[] = [];
+  pacientesFiltrados: any[] = [];
 
   indiceMedicao = 0;
-  pacientesFiltrados = [...this.pacientes];
 
-  constructor(private alertController: AlertController) {
-    addIcons({arrowBackOutline,trashOutline,personAddOutline,waterOutline,heartOutline,thermometerOutline,chevronBackOutline,chevronForwardOutline,downloadOutline,trash,eyeOutline});
+  constructor(
+    private alertController: AlertController, 
+    private databaseService: DatabaseService
+  ) {
+    addIcons({
+      arrowBackOutline, trashOutline, personAddOutline, waterOutline, 
+      heartOutline, thermometerOutline, chevronBackOutline, 
+      chevronForwardOutline, downloadOutline, trash, eyeOutline
+    });
   }
+
+
+  async carregarPacientes() {
+    try {
+      const dados = await this.databaseService.listarPacientes();
+      this.pacientes = dados;
+      this.pacientesFiltrados = [...this.pacientes];
+    } catch (error) {
+      console.error("Erro ao carregar pacientes do SQLite:", error);
+    }
+  }
+async salvarNovoPaciente() {
+  if (this.novoPaciente.nome && this.novoPaciente.cpf) {
+    try {
+      // Força a verificação da conexão antes de salvar
+      await this.databaseService.iniciarBanco(); 
+      
+      await this.databaseService.addPaciente(
+        this.novoPaciente.nome,
+        this.novoPaciente.cpf,
+        this.novoPaciente.dataNasc
+      );
+      
+      await this.carregarPacientes();
+      this.novoPaciente = { nome: '', cpf: '', dataNasc: '' };
+      this.viewMode = 'lista';
+    } catch (error) {
+      console.error("Erro ao salvar paciente:", error);
+    }
+  }
+}
 
   gerarGrafico() {
     if (this.chart) {
       this.chart.destroy();
     }
 
-    const dadosMedicao = this.pacienteSelecionado?.medicoes[this.indiceMedicao];
+    // Nota: O acesso a 'medicoes' depende de como você estruturou o retorno no DatabaseService
+    const dadosMedicao = this.pacienteSelecionado?.medicoes?.[this.indiceMedicao];
     
     this.chart = new Chart(this.lineChart.nativeElement, {
       type: 'line',
@@ -89,9 +120,9 @@ export class Tab3Page {
   async deletarMedicao(index: number) {
     const alert = await this.alertController.create({
       header: 'Confirmar exclusão',
-      message: 'Tem certeza que deseja excluir está medição?',
-      buttons:[
-        { text: 'cancelar', role: 'cancel'},
+      message: 'Tem certeza que deseja excluir esta medição?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
         {
           text: 'Excluir',
           handler: () => {
@@ -127,21 +158,6 @@ export class Tab3Page {
     this.viewMode = 'cadastro';
   }
 
-  salvarNovoPaciente() {
-    if(this.novoPaciente.nome && this.novoPaciente.cpf) {
-      const id = this.pacientes.length + 1;
-      const pacienteParaAdicionar = { 
-        ...this.novoPaciente, 
-        id, 
-        medicoes: [] 
-      };
-      this.pacientes.push(pacienteParaAdicionar);
-      this.pacientesFiltrados = [...this.pacientes];
-      this.novoPaciente = { nome: '', cpf: '', dataNasc: '' }; 
-      this.viewMode = 'lista';
-    }
-  }
-
   verDetalhes(paciente: any) {
     this.pacienteSelecionado = paciente;
     this.viewMode = 'detalhes';
@@ -151,7 +167,8 @@ export class Tab3Page {
     }, 200);
   }
 
-  deletarPaciente(paciente: any) {
+  async deletarPaciente(paciente: any) {
+    // Aqui você deve adicionar um método no DatabaseService para deletar do SQLite também
     this.pacientes = this.pacientes.filter(p => p.id !== paciente.id);
     this.pacientesFiltrados = [...this.pacientes];
   }
@@ -160,24 +177,24 @@ export class Tab3Page {
     this.viewMode = 'lista';
     this.pacienteSelecionado = null;
   }
-formatarCpf(event: any) {
- 
-  let valor = event.target.value.replace(/\D/g, '');
-  if (valor.length > 11) {
-    valor = valor.slice(0, 11);
+
+  formatarCpf(event: any) {
+    let valor = event.target.value.replace(/\D/g, '');
+    if (valor.length > 11) valor = valor.slice(0, 11);
+    valor = valor.replace(/^(\d{3})(\d)/, '$1.$2');
+    valor = valor.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+    valor = valor.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+    this.novoPaciente.cpf = valor;
   }
-  valor = valor.replace(/^(\d{3})(\d)/, '$1.$2');
-  valor = valor.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
-  valor = valor.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
-  this.novoPaciente.cpf = valor;
-  }
+  async ionViewWillEnter() {
+  // Garante que o banco está pronto antes de listar ou salvar
+  await this.databaseService.iniciarBanco(); 
+  await this.carregarPacientes();
+}
 
   formatoData(event: any) {
     let valor = event.target.value.replace(/\D/g, '');
-    if (valor.length > 8) {
-      valor = valor.slice(0, 8);
-    }
-
+    if (valor.length > 8) valor = valor.slice(0, 8);
     valor = valor.replace(/(\d{2})(\d)/, '$1/$2');
     valor = valor.replace(/(\d{2})(\d)/, '$1/$2');
     this.novoPaciente.dataNasc = valor; 
