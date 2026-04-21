@@ -15,21 +15,97 @@
 
     <ion-card-content>
       <form (ngSubmit)="register()">
+
         <ion-item>
-          <ion-label position="floating">Novo Usuário</ion-label>
+          <ion-label position="floating">Nome Completo</ion-label>
+          <ion-input [(ngModel)]="dados.nomeCompleto" name="nomeCompleto" required></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Email</ion-label>
+          <ion-input [(ngModel)]="dados.email" name="email" type="email" required></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">CPF</ion-label>
+          <ion-input [(ngModel)]="dados.cpf" name="cpf" (ionInput)="formatarCpf($event)" maxlength="14" required></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Telefone/Celular</ion-label>
+          <ion-input [(ngModel)]="dados.telefone" name="telefone" (ionInput)="formatarTelefone($event)" maxlength="15" required></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-select [(ngModel)]="dados.genero" name="genero" label="Gênero" label-placement="floating" interface="popover">
+            <ion-select-option value="masculino">Masculino</ion-select-option>
+            <ion-select-option value="feminino">Feminino</ion-select-option>
+            <ion-select-option value="outro">Outro</ion-select-option>
+            <ion-select-option value="prefiro_nao_dizer">Prefiro não dizer</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select [(ngModel)]="dados.tipoProfissional" name="tipoProfissional" label="Tipo de Profissional" label-placement="floating" interface="popover">
+            <ion-select-option value="medico">Médico(a)</ion-select-option>
+            <ion-select-option value="enfermeiro">Enfermeiro(a)</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item *ngIf="dados.tipoProfissional === 'medico'">
+          <ion-label position="floating">Especialidade Médica</ion-label>
+          <ion-input [(ngModel)]="dados.especialidade" name="especialidade"></ion-input>
+        </ion-item>
+
+        <ion-item *ngIf="dados.tipoProfissional === 'medico'">
+          <ion-label position="floating">CRM (número)</ion-label>
+          <ion-input [(ngModel)]="dados.crm" name="crm" required></ion-input>
+        </ion-item>
+
+        <ion-item *ngIf="dados.tipoProfissional === 'medico'">
+          <ion-select [(ngModel)]="dados.uf" name="uf" label="UF do CRM" label-placement="floating" interface="popover">
+            <ion-select-option *ngFor="let estado of estados" [value]="estado">{{ estado }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item *ngIf="dados.tipoProfissional === 'enfermeiro'">
+          <ion-label position="floating">COREN (número)</ion-label>
+          <ion-input [(ngModel)]="dados.crm" name="coren"></ion-input>
+        </ion-item>
+
+        <ion-item *ngIf="dados.tipoProfissional === 'enfermeiro'">
+          <ion-select [(ngModel)]="dados.uf" name="ufCoren" label="UF do COREN" label-placement="floating" interface="popover">
+            <ion-select-option *ngFor="let estado of estados" [value]="estado">{{ estado }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <div class="section-divider">
+          <p class="section-title">Dados de Acesso</p>
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Usuário</ion-label>
           <ion-input [(ngModel)]="newUsername" name="newUsername" required></ion-input>
         </ion-item>
 
         <ion-item>
-          <ion-label position="floating">Nova Senha</ion-label>
+          <ion-label position="floating">Senha</ion-label>
           <ion-input [(ngModel)]="newPassword" name="newPassword" type="password" required></ion-input>
         </ion-item>
 
-        <ion-button expand="block" type="submit" [disabled]="!newUsername || !newPassword" class="ion-margin-top" (click)="irParaLogin()">
+        <div class="terms-container">
+          <ion-checkbox [(ngModel)]="dados.termsAccepted" name="termsAccepted"></ion-checkbox>
+          <ion-label class="terms-label" (click)="mostrarTermos()">
+            Li e aceito os <span class="terms-link">Termos de Uso</span> e a <span class="terms-link">Política de Privacidade</span>.
+          </ion-label>
+        </div>
+
+        <ion-button expand="block" type="submit"
+          [disabled]="!newUsername || !newPassword || !dados.nomeCompleto || !dados.email || !dados.cpf || !dados.termsAccepted"
+          class="ion-margin-top">
           Finalizar Cadastro
         </ion-button>
       </form>
-
     </ion-card-content>
   </ion-card>
 </ion-content>

@@ -1,0 +1,105 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/tab1"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Meu Perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="perfil-content">
+
+  <!-- Dados do Profissional -->
+  <ion-card class="perfil-card">
+    <ion-card-header>
+      <div class="perfil-avatar">
+        <ion-icon name="person-circle" class="avatar-icon"></ion-icon>
+      </div>
+      <ion-card-title class="perfil-nome">{{ user?.nomeCompleto || user?.username }}</ion-card-title>
+      <p class="perfil-subtitulo" *ngIf="user?.especialidade">{{ user?.especialidade }}</p>
+      <p class="perfil-subtitulo" *ngIf="user?.crm && user?.uf">
+        {{ user?.tipoProfissional === 'enfermeiro' ? 'COREN' : 'CRM' }}: {{ user?.crm }} - {{ user?.uf }}
+      </p>
+    </ion-card-header>
+  </ion-card>
+
+  <!-- Info do Profissional -->
+  <ion-card class="info-card">
+    <ion-card-header>
+      <ion-card-title>Informações</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-icon name="mail-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <p>Email</p>
+            <h3>{{ user?.email || 'Não informado' }}</h3>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="call-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <p>Telefone</p>
+            <h3>{{ user?.telefone || 'Não informado' }}</h3>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="card-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <p>CPF</p>
+            <h3>{{ user?.cpf || 'Não informado' }}</h3>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="person-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <p>Gênero</p>
+            <h3>{{ formatarGenero(user?.genero) }}</h3>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Sobre o Luy -->
+  <ion-card class="info-card" (click)="mostrarSobreLuy()">
+    <ion-card-content>
+      <ion-item lines="none" detail="true">
+        <ion-icon name="information-circle-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Sobre o Luy-83</h3>
+          <p>Toque para saber mais</p>
+        </ion-label>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Suporte -->
+  <ion-card class="info-card">
+    <ion-card-content>
+      <ion-item lines="none">
+        <ion-icon name="headset-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Suporte</h3>
+          <p>(11) 99999-0000</p>
+          <p class="suporte-obs">Para alteração de dados, entre em contato via suporte.</p>
+        </ion-label>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Botão Deletar Conta -->
+  <div class="delete-section">
+    <ion-button expand="block" color="danger" (click)="confirmarDeletarConta()">
+      <ion-icon name="trash-outline" slot="start"></ion-icon>
+      Deletar Conta
+    </ion-button>
+  </div>
+
+  <!-- Footer com versão -->
+  <div class="version-footer">
+    <p>Luy-83 App - Versão 1.0.0</p>
+  </div>
+
+</ion-content>

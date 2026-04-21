@@ -1,11 +1,29 @@
 import { Injectable } from '@angular/core';
 import { EmailService } from './email.service';
 
+export interface UserData {
+  id: number;
+  username: string;
+  password: string;
+  email: string;
+  role: string;
+  nomeCompleto: string;
+  genero: string;
+  telefone: string;
+  tipoProfissional: string;
+  crm: string;
+  uf: string;
+  cpf: string;
+  especialidade: string;
+  termsAccepted: boolean;
+  firstLogin: boolean;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class Database {
-  private users: any[] = [];
+  private users: UserData[] = [];
   private passwordResetTokens: Map<string, { token: string; email: string; expiresAt: number }> = new Map();
 
   constructor(private emailService: EmailService) {
@@ -13,34 +31,86 @@ export class Database {
   }
 
   async initDatabase() {
-    // Simular inicialização
     const storedUsers = localStorage.getItem('users');
     if (storedUsers) {
       this.users = JSON.parse(storedUsers);
     } else {
-      // Usuário admin padrão com email
-      this.users = [{ id: 1, username: 'admin', password: 'admin123', email: 'admin@example.com', role: 'admin' }];
+      this.users = [{
+        id: 1, username: 'admin', password: 'admin123', email: 'admin@example.com', role: 'admin',
+        nomeCompleto: 'Administrador', genero: '', telefone: '', tipoProfissional: 'medico',
+        crm: '', uf: '', cpf: '', especialidade: '', termsAccepted: true, firstLogin: false
+      }];
       localStorage.setItem('users', JSON.stringify(this.users));
     }
     console.log('Database initialized with users:', this.users);
   }
 
   async login(username: string, password: string): Promise<any> {
-    console.log('Database login chamado com:', username, password);
     const user = this.users.find(u => u.username === username && u.password === password);
-    console.log('Usuário encontrado:', user);
     return user || null;
   }
 
-  async register(username: string, password: string, email?: string): Promise<void> {
-    console.log('Database register chamado com:', username, password, email);
+  async register(username: string, password: string, dados: Partial<UserData> = {}): Promise<void> {
     if (this.users.find(u => u.username === username)) {
       throw new Error('Usuário já existe');
     }
-    const newUser = { id: this.users.length + 1, username, password, email: email || '', role: 'user' };
+    if (dados.cpf && this.users.find(u => u.cpf === dados.cpf)) {
+      throw new Error('CPF já cadastrado');
+    }
+    const newUser: UserData = {
+      id: this.users.length + 1,
+      username,
+      password,
+      email: dados.email || '',
+      role: 'user',
+      nomeCompleto: dados.nomeCompleto || '',
+      genero: dados.genero || '',
+      telefone: dados.telefone || '',
+      tipoProfissional: dados.tipoProfissional || 'medico',
+      crm: dados.crm || '',
+      uf: dados.uf || '',
+      cpf: dados.cpf || '',
+      especialidade: dados.especialidade || '',
+      termsAccepted: dados.termsAccepted || false,
+      firstLogin: true
+    };
     this.users.push(newUser);
     localStorage.setItem('users', JSON.stringify(this.users));
-    console.log('Usuário registrado');
+  }
+
+  markFirstLoginDone() {
+    const user = this.getUser();
+    if (user) {
+      user.firstLogin = false;
+      this.setUser(user);
+      const idx = this.users.findIndex(u => u.id === user.id);
+      if (idx !== -1) {
+        this.users[idx].firstLogin = false;
+        localStorage.setItem('users', JSON.stringify(this.users));
+      }
+    }
+  }
+
+  updateUser(updatedUser: Partial<UserData>) {
+    const user = this.getUser();
+    if (user) {
+      const merged = { ...user, ...updatedUser };
+      this.setUser(merged);
+      const idx = this.users.findIndex(u => u.id === user.id);
+      if (idx !== -1) {
+        this.users[idx] = { ...this.users[idx], ...updatedUser };
+        localStorage.setItem('users', JSON.stringify(this.users));
+      }
+    }
+  }
+
+  async deleteAccount(): Promise<void> {
+    const user = this.getUser();
+    if (user) {
+      this.users = this.users.filter(u => u.id !== user.id);
+      localStorage.setItem('users', JSON.stringify(this.users));
+      this.logout();
+    }
   }
 
   async findUserByEmail(email: string): Promise<any> {

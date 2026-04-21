@@ -1,0 +1,31 @@
+.section-divider {
+  margin: 20px 0 10px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+
+  .section-title {
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: #555;
+    margin: 0;
+  }
+}
+
+.terms-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0 8px;
+  padding: 0 4px;
+}
+
+.terms-label {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.terms-link {
+  color: var(--ion-color-primary);
+  text-decoration: underline;
+}

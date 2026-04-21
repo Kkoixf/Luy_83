@@ -24,4 +24,9 @@ export const routes: Routes = [
     path: 'password-recovery',
     loadComponent: () => import('./password-recovery/password-recovery.page').then( m => m.PasswordRecoveryPage)
   },
+  {
+    path: 'perfil',
+    loadComponent: () => import('./perfil/perfil.page').then( m => m.PerfilPage),
+    canActivate: [authGuard]
+  },
 ];

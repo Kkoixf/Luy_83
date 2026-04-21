@@ -1,0 +1,76 @@
+.perfil-content {
+  --background: #f4f5f8;
+}
+
+.perfil-card {
+  text-align: center;
+  margin-top: 16px;
+  border-radius: 16px;
+
+  .perfil-avatar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .avatar-icon {
+    font-size: 80px;
+    color: var(--ion-color-primary);
+  }
+
+  .perfil-nome {
+    font-size: 1.3rem;
+    font-weight: bold;
+  }
+
+  .perfil-subtitulo {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 2px 0;
+  }
+}
+
+.info-card {
+  border-radius: 12px;
+
+  ion-card-title {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+  ion-item {
+    --padding-start: 0;
+  }
+
+  h3 {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+
+  p {
+    font-size: 0.8rem;
+    color: #888;
+  }
+
+  .suporte-obs {
+    font-size: 0.75rem;
+    color: #999;
+    margin-top: 4px;
+  }
+}
+
+.delete-section {
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.version-footer {
+  text-align: center;
+  padding: 16px 0 32px;
+
+  p {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin: 0;
+  }
+}
