@@ -65,8 +65,8 @@ export class Tab1Page implements OnInit {
     this.router.navigate(['/perfil']);
   }
 
-  logout() {
-    this.database.logout();
-    this.router.navigate(['/login']);
-  }
+async logout() {
+  await this.database.logout(); 
+  this.router.navigate(['/login'], { replaceUrl: true }); 
+}
 }
