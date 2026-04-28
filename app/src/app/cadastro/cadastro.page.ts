@@ -1,20 +1,32 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonInput, IonCard, IonCardTitle, IonCardHeader, IonCardContent, IonLabel, IonBackButton, IonButtons, IonSelect, IonSelectOption, IonCheckbox } from '@ionic/angular/standalone';
+import { 
+  IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, 
+  IonInput, IonCard, IonCardTitle, IonCardHeader, IonCardContent, 
+  IonLabel, IonBackButton, IonButtons, IonSelect, IonSelectOption, IonCheckbox 
+} from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
-import { Database } from '../services/database';
+
+// --- IMPORTS DO FIREBASE ---
+import { Auth, createUserWithEmailAndPassword, onAuthStateChanged } from '@angular/fire/auth';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-cadastro',
   templateUrl: './cadastro.page.html',
   styleUrls: ['./cadastro.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonInput, CommonModule, FormsModule, IonCard, IonCardTitle, IonCardHeader, IonCardContent, IonLabel, IonBackButton, IonButtons, IonSelect, IonSelectOption, IonCheckbox]
+  imports: [
+    IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, 
+    IonInput, CommonModule, FormsModule, IonCard, IonCardTitle, 
+    IonCardHeader, IonCardContent, IonLabel, IonBackButton, 
+    IonButtons, IonSelect, IonSelectOption, IonCheckbox
+  ]
 })
 export class CadastroPage implements OnInit {
-  newUsername: string = '';
+  
   newPassword: string = '';
 
   dados = {
@@ -38,25 +50,65 @@ export class CadastroPage implements OnInit {
 
   constructor(
     private router: Router,
-    private database: Database,
     private toastController: ToastController,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private auth: Auth,           
+    private firestore: Firestore   
   ) { }
 
-  async ngOnInit() {
-    await this.database.waitForDbReady();
-    if (this.database.isLoggedIn()) {
-      this.router.navigate(['/tabs/tab1']);
-    }
+  ngOnInit() {
+
+    onAuthStateChanged(this.auth, (user) => {
+      if (user) {
+        this.router.navigate(['/tabs/tab1']);
+      }
+    });
   }
 
   async register() {
+
+    if (!this.dados.termsAccepted) {
+      this.showToast('Você precisa aceitar os termos de uso.');
+      return;
+    }
+
     try {
-      await this.database.register(this.newUsername, this.newPassword, this.dados);
+
+      const userCredential = await createUserWithEmailAndPassword(
+        this.auth, 
+        this.dados.email, 
+        this.newPassword
+      );
+
+      const uid = userCredential.user.uid;
+
+  
+      await setDoc(doc(this.firestore, 'usuarios', uid), {
+        nomeCompleto: this.dados.nomeCompleto,
+        genero: this.dados.genero,
+        telefone: this.dados.telefone,
+        tipoProfissional: this.dados.tipoProfissional,
+        crm: this.dados.crm,
+        uf: this.dados.uf,
+        cpf: this.dados.cpf,
+        especialidade: this.dados.especialidade,
+        email: this.dados.email,
+        projeto: 'Luy-83',
+        dataCriacao: new Date().toISOString()
+      });
+
       await this.showToast('Cadastro realizado com sucesso!');
       this.router.navigate(['/login']);
-    } catch (error) {
-      this.showToast('Erro ao cadastrar: ' + (error as Error).message);
+
+    } catch (error: any) {
+      let mensagem = 'Erro ao cadastrar';
+
+      if (error.code === 'auth/email-already-in-use') mensagem = 'Este e-mail já está em uso.';
+      if (error.code === 'auth/weak-password') mensagem = 'A senha deve ter pelo no mínimo 6 caracteres.';
+      if (error.code === 'auth/invalid-email') mensagem = 'E-mail inválido.';
+
+      this.showToast(mensagem);
+      console.error('Erro Firebase:', error);
     }
   }
 
@@ -96,7 +148,8 @@ export class CadastroPage implements OnInit {
   async showToast(message: string) {
     const toast = await this.toastController.create({
       message,
-      duration: 2000
+      duration: 3000,
+      position: 'bottom'
     });
     await toast.present();
   }

@@ -84,11 +84,6 @@
         </div>
 
         <ion-item>
-          <ion-label position="floating">Usuário</ion-label>
-          <ion-input [(ngModel)]="newUsername" name="newUsername" required></ion-input>
-        </ion-item>
-
-        <ion-item>
           <ion-label position="floating">Senha</ion-label>
           <ion-input [(ngModel)]="newPassword" name="newPassword" type="password" required></ion-input>
         </ion-item>
@@ -101,7 +96,7 @@
         </div>
 
         <ion-button expand="block" type="submit"
-          [disabled]="!newUsername || !newPassword || !dados.nomeCompleto || !dados.email || !dados.cpf || !dados.termsAccepted"
+          [disabled]="!dados.email || !newPassword || !dados.nomeCompleto || !dados.cpf || !dados.termsAccepted"
           class="ion-margin-top">
           Finalizar Cadastro
         </ion-button>

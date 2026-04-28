@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem, IonLabel, IonInput, IonButton, IonBackButton, IonButtons, IonSpinner } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
-import { Database } from '../services/database';
 import { ToastController } from '@ionic/angular';
+import { Auth, sendPasswordResetEmail } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-password-recovery',
@@ -17,12 +17,11 @@ export class PasswordRecoveryPage implements OnInit {
   email: string = '';
   isLoading: boolean = false;
   emailSent: boolean = false;
-  recoveryToken: string = '';
 
   constructor(
     private router: Router,
-    private database: Database,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private auth: Auth
   ) { }
 
   ngOnInit() {
@@ -36,28 +35,17 @@ export class PasswordRecoveryPage implements OnInit {
 
     this.isLoading = true;
     try {
-      const user = await this.database.findUserByEmail(this.email);
-
-      if (!user) {
-        this.showToast('Email não encontrado no sistema');
-        this.isLoading = false;
-        return;
+      await sendPasswordResetEmail(this.auth, this.email);
+      this.emailSent = true;
+      this.showToast('Email de recuperação enviado com sucesso!');
+    } catch (error: any) {
+      let message = 'Erro ao processar sua solicitação';
+      if (error.code === 'auth/user-not-found') {
+        message = 'Email não encontrado no sistema';
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'Formato de email inválido';
       }
-
-      // Gerar token e simular envio de email
-      const result = await this.database.sendPasswordResetEmail(this.email);
-
-      if (result.success) {
-        this.emailSent = true;
-        this.recoveryToken = result.token;
-        this.showToast('Email de recuperação enviado com sucesso!');
-        console.log('Token para testes:', result.token);
-      } else {
-        this.showToast('Erro ao enviar email de recuperação');
-      }
-    } catch (error) {
-      console.error('Erro ao recuperar senha:', error);
-      this.showToast('Erro ao processar sua solicitação');
+      this.showToast(message);
     } finally {
       this.isLoading = false;
     }
