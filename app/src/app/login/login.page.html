@@ -32,12 +32,21 @@
           Entrar
         </ion-button>
 
-        <ion-button expand="block" fill="outline" (click)="irParaRecuperarSenha()">
+        <ion-button expand="block" fill="clear" size="small" (click)="irParaRecuperarSenha()">
           Esqueci minha senha
         </ion-button>
       </form>
 
-      <ion-button expand="block" fill="outline" (click)="irParaCadastro()">
+      <div class="ion-margin-vertical" style="text-align: center;">
+        <p>Ou entre com</p>
+      </div>
+
+      <ion-button expand="block" color="danger" fill="outline" (click)="loginComGoogle()">
+        <ion-icon slot="start" name="logo-google"></ion-icon>
+        Entrar com Google
+      </ion-button>
+
+      <ion-button expand="block" fill="outline" (click)="irParaCadastro()" class="ion-margin-top">
         Cadastre-se
       </ion-button>
     </ion-card-content>
