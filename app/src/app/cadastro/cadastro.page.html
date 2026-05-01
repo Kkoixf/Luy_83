@@ -1,132 +1,161 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/login"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Criar Conta</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="auth-wrapper">
+  <div class="container-central">
+    <div class="header-section">
+      <div class="logo-pill"></div>
+      <ion-buttons class="botao" slot="start">
+        <ion-back-button defaultHref="/login"></ion-back-button>
+        <h2 class="botao-title">Voltar</h2>
+      </ion-buttons>
+    </div>
 
-<ion-content [fullscreen]="true">
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>{{ googleFlow ? 'Complete seu cadastro' : 'Cadastro no Sistema' }}</ion-card-title>
-    </ion-card-header>
+    <ion-card class="register-card">
+      <ion-card-content>
 
-    <ion-card-content>
-      <div *ngIf="googleFlow" class="google-info">
-        <p>
-          Você já está autenticado como <strong>{{ dados.email || 'usuário externo' }}</strong>.
-          Complete os dados abaixo para finalizar seu cadastro. A senha não é necessária — você
-          já tem uma credencial ativa.
-        </p>
-        <ion-button size="small" fill="clear" (click)="trocarConta()" class="trocar-btn">
-          Não é você? Trocar de conta
-        </ion-button>
-      </div>
-
-      <form (ngSubmit)="register()">
-
-        <ion-item>
-          <ion-label position="floating">Nome Completo</ion-label>
-          <ion-input [(ngModel)]="dados.nomeCompleto" name="nomeCompleto" required></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Email</ion-label>
-          <ion-input [(ngModel)]="dados.email" name="email" type="email" required [readonly]="googleFlow"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">CPF</ion-label>
-          <ion-input [(ngModel)]="dados.cpf" name="cpf" (ionInput)="formatarCpf($event)" maxlength="14" required></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Telefone/Celular</ion-label>
-          <ion-input [(ngModel)]="dados.telefone" name="telefone" (ionInput)="formatarTelefone($event)" maxlength="15" required></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-select [(ngModel)]="dados.genero" name="genero" label="Gênero" label-placement="floating" interface="popover">
-            <ion-select-option value="masculino">Masculino</ion-select-option>
-            <ion-select-option value="feminino">Feminino</ion-select-option>
-            <ion-select-option value="outro">Outro</ion-select-option>
-            <ion-select-option value="prefiro_nao_dizer">Prefiro não dizer</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <ion-item>
-          <ion-select [(ngModel)]="dados.tipoProfissional" name="tipoProfissional" label="Tipo de Profissional" label-placement="floating" interface="popover">
-            <ion-select-option value="medico">Médico(a)</ion-select-option>
-            <ion-select-option value="enfermeiro">Enfermeiro(a)</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <ion-item *ngIf="dados.tipoProfissional === 'medico'">
-          <ion-label position="floating">Especialidade Médica</ion-label>
-          <ion-input [(ngModel)]="dados.especialidade" name="especialidade"></ion-input>
-        </ion-item>
-
-        <ion-item *ngIf="dados.tipoProfissional === 'medico'">
-          <ion-label position="floating">CRM (número)</ion-label>
-          <ion-input [(ngModel)]="dados.crm" name="crm" required></ion-input>
-        </ion-item>
-
-        <ion-item *ngIf="dados.tipoProfissional === 'medico'">
-          <ion-select [(ngModel)]="dados.uf" name="uf" label="UF do CRM" label-placement="floating" interface="popover">
-            <ion-select-option *ngFor="let estado of estados" [value]="estado">{{ estado }}</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <ion-item *ngIf="dados.tipoProfissional === 'enfermeiro'">
-          <ion-label position="floating">COREN (número)</ion-label>
-          <ion-input [(ngModel)]="dados.crm" name="coren"></ion-input>
-        </ion-item>
-
-        <ion-item *ngIf="dados.tipoProfissional === 'enfermeiro'">
-          <ion-select [(ngModel)]="dados.uf" name="ufCoren" label="UF do COREN" label-placement="floating" interface="popover">
-            <ion-select-option *ngFor="let estado of estados" [value]="estado">{{ estado }}</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <div class="section-divider">
-          <p class="section-title">Dados de Acesso</p>
+        <div *ngIf="googleFlow" class="google-info">
+          <p>
+            Você já está autenticado como <strong>{{ dados.email || 'usuário externo' }}</strong>.
+            Complete os dados abaixo. A senha não é necessária — você já tem credencial ativa.
+          </p>
+          <ion-button size="small" fill="clear" (click)="trocarConta()" class="trocar-btn">
+            Não é você? Trocar de conta
+          </ion-button>
         </div>
 
-        <ion-item>
-          <ion-label position="floating">Username</ion-label>
-          <ion-input [(ngModel)]="dados.username" name="username" required maxlength="20" autocapitalize="off"></ion-input>
-        </ion-item>
-        <ion-note class="field-hint">3-20 caracteres, apenas letras, números, _ ou .</ion-note>
+        <form (ngSubmit)="register()">
 
-        <ion-item *ngIf="!googleFlow">
-          <ion-label position="floating">Senha</ion-label>
-          <ion-input [(ngModel)]="newPassword" name="newPassword" type="password" required></ion-input>
-        </ion-item>
+          <div class="input-container">
+            <ion-label class="custom-label">Nome Completo</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="dados.nomeCompleto" name="nomeCompleto" required></ion-input>
+            </div>
+          </div>
 
-        <ion-item *ngIf="!googleFlow">
-          <ion-label position="floating">Confirmar Senha</ion-label>
-          <ion-input [(ngModel)]="confirmPassword" name="confirmPassword" type="password" required></ion-input>
-        </ion-item>
+          <div class="input-container">
+            <ion-label class="custom-label">Email</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="dados.email" name="email" type="email" required [readonly]="googleFlow"></ion-input>
+            </div>
+          </div>
 
-        <ion-note *ngIf="!googleFlow && confirmPassword && newPassword !== confirmPassword" color="danger" class="field-hint">
-          As senhas não coincidem.
-        </ion-note>
+          <div class="input-container">
+            <ion-label class="custom-label">CPF</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="dados.cpf" name="cpf" (ionInput)="formatarCpf($event)" maxlength="14" required></ion-input>
+            </div>
+          </div>
 
-        <div class="terms-container">
-          <ion-checkbox [(ngModel)]="dados.termsAccepted" name="termsAccepted"></ion-checkbox>
-          <ion-label class="terms-label" (click)="mostrarTermos()">
-            Li e aceito os <span class="terms-link">Termos de Uso</span> e a <span class="terms-link">Política de Privacidade</span>.
-          </ion-label>
-        </div>
+          <div class="input-container">
+            <ion-label class="custom-label">Telefone / Celular</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="dados.telefone" name="telefone" (ionInput)="formatarTelefone($event)" maxlength="15" required></ion-input>
+            </div>
+          </div>
 
-        <ion-button expand="block" type="submit"
-          [disabled]="!dados.username || !dados.email || !dados.nomeCompleto || !dados.cpf || !dados.termsAccepted || (!googleFlow && (!newPassword || newPassword !== confirmPassword))"
-          class="ion-margin-top">
-          Finalizar Cadastro
-        </ion-button>
-      </form>
-    </ion-card-content>
-  </ion-card>
+          <div class="input-container">
+            <ion-label class="custom-label">Gênero</ion-label>
+            <div class="custom-input-box">
+              <ion-select [(ngModel)]="dados.genero" name="genero" interface="popover" toggle-icon="chevron-down-outline" placeholder="Selecione">
+                <ion-select-option value="masculino">Masculino</ion-select-option>
+                <ion-select-option value="feminino">Feminino</ion-select-option>
+                <ion-select-option value="outro">Outro</ion-select-option>
+                <ion-select-option value="prefiro_nao_dizer">Prefiro não dizer</ion-select-option>
+              </ion-select>
+            </div>
+          </div>
+
+          <div class="input-container">
+            <ion-label class="custom-label">Tipo de Profissional</ion-label>
+            <div class="custom-input-box">
+              <ion-select [(ngModel)]="dados.tipoProfissional" name="tipoProfissional" interface="popover" placeholder="Selecione">
+                <ion-select-option value="medico">Médico(a)</ion-select-option>
+                <ion-select-option value="enfermeiro">Enfermeiro(a)</ion-select-option>
+              </ion-select>
+            </div>
+          </div>
+
+          <div *ngIf="dados.tipoProfissional === 'medico'">
+            <div class="input-container">
+              <ion-label class="custom-label">Especialidade Médica</ion-label>
+              <div class="custom-input-box">
+                <ion-input [(ngModel)]="dados.especialidade" name="especialidade"></ion-input>
+              </div>
+            </div>
+
+            <div class="input-container">
+              <ion-label class="custom-label">CRM (número)</ion-label>
+              <div class="custom-input-box">
+                <ion-input [(ngModel)]="dados.crm" name="crm" required></ion-input>
+              </div>
+            </div>
+
+            <div class="input-container">
+              <ion-label class="custom-label">UF do CRM</ion-label>
+              <div class="custom-input-box">
+                <ion-select [(ngModel)]="dados.uf" name="uf" interface="popover">
+                  <ion-select-option *ngFor="let estado of estados" [value]="estado">{{ estado }}</ion-select-option>
+                </ion-select>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="dados.tipoProfissional === 'enfermeiro'">
+            <div class="input-container">
+              <ion-label class="custom-label">COREN (número)</ion-label>
+              <div class="custom-input-box">
+                <ion-input [(ngModel)]="dados.crm" name="coren" required></ion-input>
+              </div>
+            </div>
+
+            <div class="input-container">
+              <ion-label class="custom-label">UF do COREN</ion-label>
+              <div class="custom-input-box">
+                <ion-select [(ngModel)]="dados.uf" name="ufCoren" interface="popover">
+                  <ion-select-option *ngFor="let estado of estados" [value]="estado">{{ estado }}</ion-select-option>
+                </ion-select>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-container">
+            <ion-label class="custom-label">Username</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="dados.username" name="username" required maxlength="20" autocapitalize="off"></ion-input>
+            </div>
+            <small class="field-hint">3-20 caracteres, apenas letras, números, _ ou .</small>
+          </div>
+
+          <div class="input-container" *ngIf="!googleFlow">
+            <ion-label class="custom-label">Senha</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="newPassword" name="newPassword" type="password" required></ion-input>
+            </div>
+          </div>
+
+          <div class="input-container" *ngIf="!googleFlow">
+            <ion-label class="custom-label">Confirmar Senha</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="confirmPassword" name="confirmPassword" type="password" required></ion-input>
+            </div>
+            <small *ngIf="confirmPassword && newPassword !== confirmPassword" class="field-hint error">
+              As senhas não coincidem.
+            </small>
+          </div>
+
+          <div class="terms-wrapper">
+            <ion-checkbox [(ngModel)]="dados.termsAccepted" name="termsAccepted" label-placement="end" justify="start">
+              <ion-label class="terms-text" (click)="mostrarTermos()">
+                Li e aceito os <span class="link">Termos de Uso</span>
+              </ion-label>
+            </ion-checkbox>
+          </div>
+
+          <ion-button expand="block" type="submit" class="btn-finish"
+            [disabled]="!dados.username || !dados.email || !dados.nomeCompleto || !dados.cpf || !dados.termsAccepted || (!googleFlow && (!newPassword || newPassword !== confirmPassword))">
+            Finalizar Cadastro
+          </ion-button>
+
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

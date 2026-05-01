@@ -1,61 +1,154 @@
-.section-divider {
-  margin: 20px 0 10px;
-  padding-top: 15px;
-  border-top: 1px solid #ddd;
+.auth-wrapper {
+  --background: #E8EDF8;
 
-  .section-title {
-    font-weight: bold;
-    font-size: 0.95rem;
-    color: #555;
-    margin: 0;
-  }
-}
-
-.terms-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 16px 0 8px;
-  padding: 0 4px;
-}
-
-.terms-label {
-  font-size: 0.85rem;
-  line-height: 1.4;
-  cursor: pointer;
-}
-
-.terms-link {
-  color: var(--ion-color-primary);
-  text-decoration: underline;
-}
-
-.google-info {
-  background: rgba(66, 133, 244, 0.1);
-  color: var(--ion-color-primary);
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  margin: 0 0 12px;
-  border-left: 3px solid var(--ion-color-primary);
-
-  p {
-    margin: 0 0 6px;
+  .container-central {
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-  .trocar-btn {
+  .header-section {
+    text-align: left;
+    width: 100%;
+    max-width: 360px;
+    margin-bottom: 20px;
+    padding-left: 10px;
+
+    .logo-pill {
+      width: 50px;
+      height: 50px;
+      background-color: #0055FF;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .botao {
+      background-color: none;
+      color: #000000;
+    }
+
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+    }
+
+    .botao-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+    }
+  }
+
+  .register-card {
+    width: 100%;
+    max-width: 380px;
+    border-radius: 35px;
+    background: #ffffff;
+    box-shadow: none;
     margin: 0;
-    --padding-start: 0;
-    --padding-end: 0;
-    height: auto;
+  }
+
+  .input-container {
+    margin-bottom: 18px;
+
+    .custom-label {
+      display: block;
+      color: #333;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      padding-left: 5px;
+    }
+
+    .custom-input-box {
+      border: 1px solid #DEDEDE;
+      border-radius: 14px;
+      background: #ffffff;
+
+      ion-input, ion-select {
+        --padding-start: 15px;
+        --padding-end: 15px;
+        min-height: 48px;
+        font-size: 1rem;
+      }
+
+      ion-select {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+
+    .field-hint {
+      display: block;
+      font-size: 0.72rem;
+      color: #888;
+      padding: 4px 6px 0;
+
+      &.error {
+        color: #d33;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .google-info {
+    background: rgba(0, 85, 255, 0.08);
+    color: #0055FF;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin: 0 0 18px;
+    border-left: 3px solid #0055FF;
+
+    p {
+      margin: 0 0 6px;
+      color: #333;
+    }
+
+    .trocar-btn {
+      margin: 0;
+      --padding-start: 0;
+      --padding-end: 0;
+      --color: #0055FF;
+      height: auto;
+      text-transform: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+  }
+
+  .terms-wrapper {
+    margin: 20px 0;
+
+    ion-checkbox {
+      --checkbox-background: #ffffff;
+      --size: 20px;
+      --checkbox-background-checked: #0055FF;
+      --border-color: #000000;
+      font-size: 0.85rem;
+    }
+
+    .terms-text {
+      white-space: normal;
+      color: #666;
+
+      .link {
+        color: #0055FF;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .btn-finish {
+    --background: #0055FF;
+    --border-radius: 15px;
+    height: 50px;
+    font-weight: 600;
     text-transform: none;
-    font-size: 0.8rem;
   }
-}
-
-.field-hint {
-  display: block;
-  font-size: 0.75rem;
-  padding: 4px 16px 0;
-  margin-bottom: 4px;
 }
