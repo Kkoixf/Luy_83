@@ -5,6 +5,11 @@ import { IonContent, IonHeader, IonTitle, IonToolbar, IonCard, IonCardHeader, Io
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { Database } from '../services/database';
+import { addIcons } from 'ionicons';
+import {
+  personCircle, mailOutline, callOutline, cardOutline, personOutline,
+  informationCircleOutline, headsetOutline, trashOutline, chevronForwardOutline
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-perfil',
@@ -21,7 +26,12 @@ export class PerfilPage implements OnInit {
     private database: Database,
     private alertController: AlertController,
     private toastController: ToastController
-  ) {}
+  ) {
+    addIcons({
+      personCircle, mailOutline, callOutline, cardOutline, personOutline,
+      informationCircleOutline, headsetOutline, trashOutline, chevronForwardOutline
+    });
+  }
 
   ngOnInit() {
     this.user = this.database.getUser();

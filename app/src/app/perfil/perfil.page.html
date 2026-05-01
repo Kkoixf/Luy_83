@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/tab1"></ion-back-button>
+      <ion-back-button defaultHref="/tabs/tab1" color="light"></ion-back-button>
     </ion-buttons>
     <ion-title>Meu Perfil</ion-title>
   </ion-toolbar>
@@ -16,6 +16,9 @@
         <ion-icon name="person-circle" class="avatar-icon"></ion-icon>
       </div>
       <ion-card-title class="perfil-nome">{{ user?.nomeCompleto || user?.username }}</ion-card-title>
+      <p class="perfil-subtitulo tag" *ngIf="user?.tipoProfissional">
+        {{ user?.tipoProfissional === 'enfermeiro' ? 'Enfermeiro(a)' : 'Médico(a)' }}
+      </p>
       <p class="perfil-subtitulo" *ngIf="user?.especialidade">{{ user?.especialidade }}</p>
       <p class="perfil-subtitulo" *ngIf="user?.crm && user?.uf">
         {{ user?.tipoProfissional === 'enfermeiro' ? 'COREN' : 'CRM' }}: {{ user?.crm }} - {{ user?.uf }}

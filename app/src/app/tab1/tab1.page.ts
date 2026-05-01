@@ -4,6 +4,11 @@ import { IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader, Io
 import { Router } from '@angular/router';
 import { Database } from '../services/database';
 import { AlertController } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import {
+  settingsOutline, wifiOutline, handLeftOutline, peopleOutline,
+  gameControllerOutline, pulseOutline, logOutOutline
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-tab1',
@@ -20,7 +25,12 @@ export class Tab1Page implements OnInit {
     private router: Router,
     private database: Database,
     private alertController: AlertController
-  ) {}
+  ) {
+    addIcons({
+      settingsOutline, wifiOutline, handLeftOutline, peopleOutline,
+      gameControllerOutline, pulseOutline, logOutOutline
+    });
+  }
 
   ngOnInit() {
     this.user = this.database.getUser();
