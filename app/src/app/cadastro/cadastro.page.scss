@@ -1,31 +1,113 @@
-.section-divider {
-  margin: 20px 0 10px;
-  padding-top: 15px;
-  border-top: 1px solid #ddd;
+.auth-wrapper {
+  --background: #E8EDF8; 
 
-  .section-title {
-    font-weight: bold;
-    font-size: 0.95rem;
-    color: #555;
+  .container-central {
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .header-section {
+    text-align: left;
+    width: 100%;
+    max-width: 360px;
+    margin-bottom: 20px;
+    padding-left: 10px;
+
+    .logo-pill {
+      width: 50px;
+      height: 50px;
+      background-color: #0055FF;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .botao{
+      background-color:none;
+      color: #000000;
+    }
+
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+
+    }.botao-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+    }
+  }
+
+  .register-card {
+    width: 100%;
+    max-width: 380px;
+    border-radius: 35px;
+    background: #ffffff;
+    box-shadow: none;
     margin: 0;
   }
-}
 
-.terms-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 16px 0 8px;
-  padding: 0 4px;
-}
+  .input-container {
+    margin-bottom: 18px;
 
-.terms-label {
-  font-size: 0.85rem;
-  line-height: 1.4;
-  cursor: pointer;
-}
+    .custom-label {
+      display: block;
+      color: #333;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      padding-left: 5px;
+    }
 
-.terms-link {
-  color: var(--ion-color-primary);
-  text-decoration: underline;
+    .custom-input-box {
+      border: 1px solid #DEDEDE;
+      border-radius: 14px;
+      background: #ffffff;
+      
+      ion-input, ion-select {
+        --padding-start: 15px;
+        --padding-end: 15px;
+        min-height: 48px;
+        font-size: 1rem;
+      }
+
+      ion-select {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  }
+
+  .terms-wrapper {
+    margin: 20px 0;
+    
+    ion-checkbox {
+      --checkbox-background: #ffffff;
+      --size: 20px;
+      --checkbox-background-checked: #0055FF;
+      --border-color: #000000;
+      font-size: 0.85rem;
+    }
+
+    .terms-text {
+      white-space: normal;
+      color: #666;
+      .link {
+        color: #0055FF;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .btn-finish {
+    --background: #0055FF;
+    --border-radius: 15px;
+    height: 50px;
+    font-weight: 600;
+    text-transform: none;
+  }
 }

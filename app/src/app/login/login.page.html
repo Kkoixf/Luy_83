@@ -1,54 +1,49 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>Login</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="auth-wrapper">
+  <div class="container-central">
+    <ion-card class="login-card">
+      <ion-card-content>
+        
+        <!-- Logotipo e Título -->
+        <div class="brand-section">
+          <div class="logo-placeholder"></div>
+          <h1 class="brand-name">Luy83</h1>
+        </div>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Login</ion-title>
-    </ion-toolbar>
-  </ion-header>
+        <!-- Formulário Adaptado -->
+        <form (ngSubmit)="login()">
+          <div class="input-container">
+            <ion-label class="custom-label">Email</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="username" name="username" type="email" required></ion-input>
+            </div>
+          </div>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Entrar no Sistema</ion-card-title>
-    </ion-card-header>
+          <div class="input-container">
+            <ion-label class="custom-label">Senha</ion-label>
+            <div class="custom-input-box">
+              <ion-input [(ngModel)]="password" name="password" type="password" required></ion-input>
+            </div>
+          </div>
 
-    <ion-card-content>
-      <form (ngSubmit)="login()">
-        <ion-item>
-          <ion-label position="floating">Usuário</ion-label>
-          <ion-input [(ngModel)]="username" name="username" required></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Senha</ion-label>
-          <ion-input [(ngModel)]="password" name="password" type="password" required></ion-input>
-        </ion-item>
-
-        <ion-button expand="block" type="submit" [disabled]="!username || !password">
-          Entrar
-        </ion-button>
-
-        <ion-button expand="block" fill="clear" size="small" (click)="irParaRecuperarSenha()">
+          <ion-button expand="block" fill="clear" size="small" (click)="irParaRecuperarSenha()">
           Esqueci minha senha
         </ion-button>
-      </form>
+          <ion-button expand="block" type="submit" class="btn-primary-blue" [disabled]="!username || !password"> ENTRAR </ion-button>
+        </form>
 
-      <div class="ion-margin-vertical" style="text-align: center;">
-        <p>Ou entre com</p>
-      </div>
+        <div class="google-login-section" (click)="loginComGoogle()">
+          <ion-icon name="logo-google" class="google-icon"></ion-icon>
+          <ion-label>Entrar com o Google</ion-label>
+        </div>
 
-      <ion-button expand="block" color="danger" fill="outline" (click)="loginComGoogle()">
-        <ion-icon slot="start" name="logo-google"></ion-icon>
-        Entrar com Google
-      </ion-button>
+        <div class="footer-links">
+          <p>
+            Não tem uma conta? 
+            <span class="link-text" (click)="irParaCadastro()">Cadastre-se</span>
+          </p>
+        </div>
 
-      <ion-button expand="block" fill="outline" (click)="irParaCadastro()" class="ion-margin-top">
-        Cadastre-se
-      </ion-button>
-    </ion-card-content>
-  </ion-card>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>
