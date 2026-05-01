@@ -1,5 +1,15 @@
 .home-content {
-  --background: #f4f5f8;
+  --background: #1a1a1a;
+}
+
+.profile-btn {
+  --color: #ffffff;
+  --background-hover: rgba(255, 255, 255, 0.15);
+
+  ion-icon {
+    font-size: 1.5rem;
+    color: #ffffff;
+  }
 }
 
 .greeting-section {
@@ -9,7 +19,7 @@
 .greeting-text {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #333;
+  color: #ffffff;
   margin: 0;
 }
 
@@ -30,20 +40,20 @@
   }
 
   &.connected {
-    background: #e6f9e6;
-    color: #2d7d2d;
+    background: rgba(76, 175, 80, 0.18);
+    color: #4caf50;
 
     .status-dot {
-      background-color: #2d7d2d;
+      background-color: #4caf50;
     }
   }
 
   &.disconnected {
-    background: #fde8e8;
-    color: #c0392b;
+    background: rgba(255, 107, 107, 0.18);
+    color: #ff6b6b;
 
     .status-dot {
-      background-color: #c0392b;
+      background-color: #ff6b6b;
     }
   }
 }
@@ -55,7 +65,7 @@
 .section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #555;
+  color: #ffffff;
   padding: 8px 8px 0;
   margin-bottom: 0;
 }
@@ -63,7 +73,8 @@
 .info-card {
   border-radius: 12px;
   margin: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #2a2a2a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
   ion-card-content {
     padding: 12px 16px;
@@ -79,18 +90,19 @@
     font-size: 1.8rem;
     min-width: 30px;
     margin-top: 2px;
+    color: #4285f4 !important;
   }
 
   h3 {
     font-size: 0.95rem;
     font-weight: 600;
     margin: 0 0 4px;
-    color: #333;
+    color: #ffffff;
   }
 
   p {
     font-size: 0.82rem;
-    color: #777;
+    color: #b0b0b0;
     margin: 0;
     line-height: 1.4;
   }
@@ -99,4 +111,9 @@
 .logout-section {
   padding: 16px;
   margin-top: 8px;
+
+  ion-button {
+    --color: #ff6b6b;
+    --border-color: #ff6b6b;
+  }
 }

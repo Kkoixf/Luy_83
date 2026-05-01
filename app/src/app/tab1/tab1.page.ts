@@ -65,8 +65,22 @@ export class Tab1Page implements OnInit {
     this.router.navigate(['/perfil']);
   }
 
-async logout() {
-  await this.database.logout(); 
-  this.router.navigate(['/login'], { replaceUrl: true }); 
-}
+  async logout() {
+    const alert = await this.alertController.create({
+      header: 'Sair da conta',
+      message: 'Tem certeza que deseja encerrar sua sessão?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Sair',
+          role: 'destructive',
+          handler: async () => {
+            await this.database.logout();
+            this.router.navigate(['/login'], { replaceUrl: true });
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
 }

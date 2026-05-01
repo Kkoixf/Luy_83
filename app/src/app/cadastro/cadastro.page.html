@@ -10,10 +10,21 @@
 <ion-content [fullscreen]="true">
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Cadastro no Sistema</ion-card-title>
+      <ion-card-title>{{ googleFlow ? 'Complete seu cadastro' : 'Cadastro no Sistema' }}</ion-card-title>
     </ion-card-header>
 
     <ion-card-content>
+      <div *ngIf="googleFlow" class="google-info">
+        <p>
+          Você já está autenticado como <strong>{{ dados.email || 'usuário externo' }}</strong>.
+          Complete os dados abaixo para finalizar seu cadastro. A senha não é necessária — você
+          já tem uma credencial ativa.
+        </p>
+        <ion-button size="small" fill="clear" (click)="trocarConta()" class="trocar-btn">
+          Não é você? Trocar de conta
+        </ion-button>
+      </div>
+
       <form (ngSubmit)="register()">
 
         <ion-item>
@@ -23,7 +34,7 @@
 
         <ion-item>
           <ion-label position="floating">Email</ion-label>
-          <ion-input [(ngModel)]="dados.email" name="email" type="email" required></ion-input>
+          <ion-input [(ngModel)]="dados.email" name="email" type="email" required [readonly]="googleFlow"></ion-input>
         </ion-item>
 
         <ion-item>
@@ -84,9 +95,24 @@
         </div>
 
         <ion-item>
+          <ion-label position="floating">Username</ion-label>
+          <ion-input [(ngModel)]="dados.username" name="username" required maxlength="20" autocapitalize="off"></ion-input>
+        </ion-item>
+        <ion-note class="field-hint">3-20 caracteres, apenas letras, números, _ ou .</ion-note>
+
+        <ion-item *ngIf="!googleFlow">
           <ion-label position="floating">Senha</ion-label>
           <ion-input [(ngModel)]="newPassword" name="newPassword" type="password" required></ion-input>
         </ion-item>
+
+        <ion-item *ngIf="!googleFlow">
+          <ion-label position="floating">Confirmar Senha</ion-label>
+          <ion-input [(ngModel)]="confirmPassword" name="confirmPassword" type="password" required></ion-input>
+        </ion-item>
+
+        <ion-note *ngIf="!googleFlow && confirmPassword && newPassword !== confirmPassword" color="danger" class="field-hint">
+          As senhas não coincidem.
+        </ion-note>
 
         <div class="terms-container">
           <ion-checkbox [(ngModel)]="dados.termsAccepted" name="termsAccepted"></ion-checkbox>
@@ -96,7 +122,7 @@
         </div>
 
         <ion-button expand="block" type="submit"
-          [disabled]="!dados.email || !newPassword || !dados.nomeCompleto || !dados.cpf || !dados.termsAccepted"
+          [disabled]="!dados.username || !dados.email || !dados.nomeCompleto || !dados.cpf || !dados.termsAccepted || (!googleFlow && (!newPassword || newPassword !== confirmPassword))"
           class="ion-margin-top">
           Finalizar Cadastro
         </ion-button>
