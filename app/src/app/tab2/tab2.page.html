@@ -5,14 +5,53 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
-  <ion-text color="medium">
-    <p style="font-size: 0.8rem;">Conectado em: {{ ipEsp32 }}</p>
-  </ion-text>
 
+  <!-- Toggle Wi-Fi / Bluetooth -->
+  <ion-segment
+    [(ngModel)]="modoConexao"
+    (ionChange)="onModoChange($event)"
+    color="primary"
+    style="margin-bottom: 12px;">
+    <ion-segment-button value="wifi">
+      <ion-icon name="wifi-outline"></ion-icon>
+      <ion-label>Wi-Fi</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="bluetooth">
+      <ion-icon name="bluetooth-outline"></ion-icon>
+      <ion-label>Bluetooth</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Info Wi-Fi -->
+  <div *ngIf="modoConexao === 'wifi'">
+    <ion-text color="medium">
+      <p style="font-size: 0.8rem; margin: 0 0 10px 4px;">Conectado em: {{ ipEsp32 }}</p>
+    </ion-text>
+  </div>
+
+  <!-- Info Bluetooth -->
+  <div *ngIf="modoConexao === 'bluetooth'">
+    <ion-item
+      lines="none"
+      [color]="(bleConectado$ | async) ? 'success' : 'warning'"
+      style="border-radius: 8px; margin-bottom: 10px;">
+      <ion-icon slot="start" name="bluetooth-outline" color="light"></ion-icon>
+      <ion-label color="light" style="font-size: 0.85rem;">{{ bleStatus$ | async }}</ion-label>
+      <ion-spinner *ngIf="bleConectando$ | async" slot="end" name="crescent" color="light"></ion-spinner>
+    </ion-item>
+    <ion-text *ngIf="!(bleConectado$ | async) && !(bleConectando$ | async)" color="medium">
+      <p style="font-size: 0.78rem; margin: 0 0 10px 4px;">
+        Conecte o Bluetooth na aba <strong>Conexão</strong> para usar os controles.
+      </p>
+    </ion-text>
+  </div>
+
+  <!-- Grade de Sensores -->
   <ion-grid class="ion-no-padding">
     <ion-row>
       <ion-col size="6" *ngFor="let item of sensores">
-        <ion-card (click)="enviarComando(item.tipo)" style="margin: 5px; text-align: center; background: #4285f4; color: white;">
+        <ion-card (click)="enviarComando(item.tipo)"
+          style="margin: 5px; text-align: center; background: #4285f4; color: white;">
           <ion-card-content>
             <ion-icon [name]="item.icone" style="font-size: 2rem;"></ion-icon>
             <p style="font-weight: bold; margin-top: 5px;">{{ item.nome }}</p>
@@ -22,6 +61,7 @@
     </ion-row>
   </ion-grid>
 
+  <!-- Lista de Gestos -->
   <ion-list lines="full" style="margin-top: 10px; background: transparent;">
     <ion-item *ngFor="let gesto of gestos" button (click)="enviarComando(gesto.tipo)">
       <ion-icon slot="start" [name]="gesto.icone" color="primary"></ion-icon>
@@ -29,4 +69,5 @@
       <ion-icon slot="end" name="chevron-forward-outline" size="small"></ion-icon>
     </ion-item>
   </ion-list>
+
 </ion-content>

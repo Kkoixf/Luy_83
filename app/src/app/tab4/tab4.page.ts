@@ -1,23 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonGrid, IonRow, IonCol, IonCard, IonCardContent,
+  IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonCardSubtitle,
   IonItem, IonLabel, IonInput, IonButton, IonIcon,
-  IonText, IonSpinner, IonList, IonCardHeader, IonCardTitle
+  IonText, IonSpinner, IonBadge
 } from '@ionic/angular/standalone';
-import { BleClient } from '@capacitor-community/bluetooth-le';
-import { CommonModule } from '@angular/common';
+import { CommonModule, AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Preferences } from '@capacitor/preferences';
-import {
-  settingsOutline, bluetoothOutline, wifiOutline,
-  lockClosedOutline, globeOutline, saveOutline,
-  eyeOffOutline,
-  eyeOutline
-} from 'ionicons/icons';
 import { addIcons } from 'ionicons';
-import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
-import { CapacitorHttp, HttpResponse } from '@capacitor/core'; // Para comandos via Wi-Fi
+import {
+  bluetoothOutline, wifiOutline, lockClosedOutline,
+  globeOutline, saveOutline, eyeOffOutline, eyeOutline
+} from 'ionicons/icons';
+import { linkOutline, unlinkOutline, refreshOutline } from 'ionicons/icons';
+import { CapacitorHttp } from '@capacitor/core';
+import { BleService } from '../services/Ble.service';
 
 @Component({
   selector: 'app-tab4',
@@ -26,148 +24,107 @@ import { CapacitorHttp, HttpResponse } from '@capacitor/core'; // Para comandos 
   standalone: true,
   imports: [
     IonHeader, IonToolbar, IonTitle, IonContent,
-    IonGrid, IonRow, IonCol, IonCard, IonCardContent,
+    IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonCardSubtitle,
     IonItem, IonLabel, IonInput, IonButton, IonIcon,
-    IonText, IonSpinner, IonList, IonCardHeader, IonCardTitle,
-    CommonModule, FormsModule
+    IonText, IonSpinner, IonBadge,
+    CommonModule, FormsModule, AsyncPipe
   ],
 })
 export class Tab4Page implements OnInit {
 
-  ipEsp32 = "192.168.0.23";
-  wifiSSID = "";
-  wifiPASS = "";
+  // ── Wi-Fi ────────────────────────────────────────────────────────────────────
+  ipEsp32 = 'maorobotica.local';
+  wifiSSID = '';
+  wifiPASS = '';
   showPassword = false;
   isConfiguring = false;
-  statusConfig = "";
+  statusConfig = '';
 
-  constructor(
-    private androidPermissions: AndroidPermissions
-  ) {
+  // ── BLE (expõe os observáveis do serviço direto no template) ─────────────────
+  bleConectado$  = this.bleService.conectado$;
+  bleStatus$     = this.bleService.statusMsg$;
+  bleConectando$ = this.bleService.conectando$;
+
+  constructor(private bleService: BleService) {
     addIcons({
-      wifiOutline,
-      lockClosedOutline,
-      bluetoothOutline,
-      globeOutline,
-      saveOutline,
-      settingsOutline,
-      eyeOffOutline,
-      eyeOutline
+      bluetoothOutline, wifiOutline, lockClosedOutline,
+      globeOutline, saveOutline, eyeOffOutline, eyeOutline,
+      linkOutline, unlinkOutline, refreshOutline
     });
   }
-
-   // Toggle para mostrar/ocultar senha 
-   togglePassword(){
-    this.showPassword = !this.showPassword;
-   }
-
 
   async ngOnInit() {
     const { value } = await Preferences.get({ key: 'ip_esp32' });
     if (value) this.ipEsp32 = value;
+  }
 
+  // ── Toggle senha ─────────────────────────────────────────────────────────────
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  // ── BLE: Conectar / Desconectar ──────────────────────────────────────────────
+  async conectarBLE() {
     try {
-      await BleClient.initialize();
-    } catch (e) {
-      console.error("Erro ao iniciar Bluetooth", e);
+      await this.bleService.conectar();
+    } catch (error: any) {
+      alert('Erro ao conectar: ' + (error?.message ?? error));
     }
   }
 
-
-  async pedirPermissoesBLE() {
-    await this.androidPermissions.requestPermissions([
-      this.androidPermissions.PERMISSION.BLUETOOTH_SCAN,
-      this.androidPermissions.PERMISSION.BLUETOOTH_CONNECT,
-      this.androidPermissions.PERMISSION.ACCESS_FINE_LOCATION
-    ]);
+  async desconectarBLE() {
+    await this.bleService.desconectar();
   }
 
+ 
+  async configurarWifi() {
+    if (!this.wifiSSID.trim()) {
+      alert('Preencha o nome da rede (SSID).');
+      return;
+    }
 
-  async configurarNovaMao() {
-    let deviceId = "";
+    this.isConfiguring = true;
+    this.statusConfig = 'Enviando...';
+
     try {
-      this.isConfiguring = true;
-      this.statusConfig = "Procurando Mão Robótica...";
+      // Garante que o BLE está conectado
+      if (!this.bleService.conectado) {
+        this.statusConfig = 'Procurando Luy...';
+        await this.bleService.conectar();
+      }
 
-
-      const device = await BleClient.requestDevice({
-        name: 'MaoRobotica_Config',
-        optionalServices: ["6E400001-B5A3-F393-E0A9-E50E24DCCA9E"]
-      });
-
-      deviceId = device.deviceId;
-      this.statusConfig = "Conectando...";
-      await BleClient.connect(deviceId);
-
-      this.statusConfig = "Enviando dados do Wi-Fi...";
-
-      // Prepara o texto para enviar (SSID e Senha)
       const payload = `SSID:${this.wifiSSID};PASS:${this.wifiPASS}`;
-      const data = new TextEncoder().encode(payload);
+      await this.bleService.enviarRaw(payload);
 
+      alert('Configuração Wi-Fi enviada! Aguarde o Luy conectar à rede.');
 
-      await BleClient.write(
-        deviceId,
-        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E",
-        "6E400002-B5A3-F393-E0A9-E50E24DCCA9E",
-        new DataView(data.buffer)
-      );
-
-      alert("Configuração enviada com sucesso!");
-
-    } catch (error) {
-      console.error(error);
-      alert("Erro na configuração: " + error);
+    } catch (error: any) {
+      alert('Erro: ' + (error?.message ?? error));
     } finally {
       this.isConfiguring = false;
-      if (deviceId) {
-        await BleClient.disconnect(deviceId);
-      }
+      this.statusConfig = '';
     }
   }
 
-
-  async enviarComando(tipoGesto: string) {
+  // ── Resetar Wi-Fi do ESP32 ───────────────────────────────────────────────────
+  async resetarWifi() {
     const host = this.ipEsp32.trim().replace('http://', '').replace('/', '');
-    const url = `http://${host}/executar?tipo=${tipoGesto}`;
-
+    const url = `http://${host}/reset_wifi`;
     try {
-      const options = { url: url };
-      const response: HttpResponse = await CapacitorHttp.get(options);
-      console.log("Comando enviado:", response.status);
-    } catch (err) {
-      alert("Erro: Mão não respondeu no Wi-Fi.");
+      const response = await CapacitorHttp.get({ url });
+      if (response.status === 200) {
+        alert('Comando enviado! O Luy irá apagar a rede e reiniciar.');
+        this.ipEsp32 = '';
+        await Preferences.remove({ key: 'ip_esp32' });
+      }
+    } catch {
+      alert('Erro ao resetar. Verifique a conexão Wi-Fi.');
     }
   }
 
-
-  // Resetar WIFI
-async desparelhar() {
-  const host = this.ipEsp32.trim().replace('http://', '').replace('/', '');
-  const url = `http://${host}/reset_wifi`; 
-  try {
-    const response = await CapacitorHttp.get({ url });
-    if (response.status === 200) {
-      alert("Comando enviado! O ESP32 irá apagar a rede e reiniciar.");
-      
-      this.ipEsp32 = "";
-      await Preferences.remove({ key: 'ip_esp32' });
-    }
-  } catch (err) {
-    alert("Erro ao tentar RESETAR. Verifique a conexão.");
-  }
-}
-
-
+  // ── Salvar IP / mDNS ─────────────────────────────────────────────────────────
   async salvarIP() {
-    try {
-      await Preferences.set({
-        key: 'ip_esp32',
-        value: this.ipEsp32
-      });
-      alert('Endereço IP salvo! Vá até a tela Controle para controlar a medição.');
-    } catch (error) {
-      console.error("Erro ao salvar IP:", error);
-    }
+    await Preferences.set({ key: 'ip_esp32', value: this.ipEsp32 });
+    alert('Endereço salvo! Use a aba Controle para enviar comandos.');
   }
 }

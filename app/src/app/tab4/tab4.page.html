@@ -6,9 +6,73 @@
 
 <ion-content fullscreen>
 
+  <!-- ════════════════════════════════════════════════════════════════════
+       SEÇÃO 1 — CONEXÃO VIA BLUETOOTH DIRETO
+     
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <ion-card color="primary">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="bluetooth-outline" style="vertical-align: middle; margin-right: 6px;"></ion-icon>
+        Conexão Bluetooth
+      </ion-card-title>
+      <ion-card-subtitle>Controle direto sem Wi-Fi</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+
+      
+      <ion-item lines="none" style="--background: transparent;">
+        <ion-icon
+          slot="start"
+          [name]="(bleConectado$ | async) ? 'link-outline' : 'link-off-outline'"
+          [color]="(bleConectado$ | async) ? 'success' : 'medium'">
+        </ion-icon>
+        <ion-label [color]="(bleConectado$ | async) ? 'success' : 'medium'">
+          {{ bleStatus$ | async }}
+        </ion-label>
+        <ion-spinner *ngIf="bleConectando$ | async" slot="end" name="crescent"></ion-spinner>
+      </ion-item>
+
+      <!-- Botão Conectar -->
+      <ion-button
+        *ngIf="!(bleConectado$ | async)"
+        expand="block"
+        color="light"
+        class="ion-margin-top"
+        (click)="conectarBLE()"
+        [disabled]="(bleConectando$ | async) ?? false">
+        <ion-icon slot="start" name="bluetooth-outline"></ion-icon>
+        {{ (bleConectando$ | async) ? 'Conectando...' : 'Conectar via Bluetooth' }}
+      </ion-button>
+
+      <!-- Botão Desconectar -->
+      <ion-button
+        *ngIf="bleConectado$ | async"
+        expand="block"
+        color="danger"
+        fill="outline"
+        class="ion-margin-top"
+        (click)="desconectarBLE()">
+        <ion-icon slot="start" name="link-off-outline"></ion-icon>
+        Desconectar
+      </ion-button>
+
+    </ion-card-content>
+  </ion-card>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SEÇÃO 2 — CONFIGURAR WI-FI via Bluetooth
+      
+  ═══════════════════════════════════════════════════════════════════════ -->
   <ion-card color="secondary">
     <ion-card-header>
-      <ion-card-title>Configurar Nova Rede Wi-Fi</ion-card-title>
+      <ion-card-title>
+        <ion-icon name="wifi-outline" style="vertical-align: middle; margin-right: 6px;"></ion-icon>
+        Configurar Wi-Fi no Luy
+      </ion-card-title>
+      <ion-card-subtitle>Envia rede e senha via Bluetooth</ion-card-subtitle>
     </ion-card-header>
 
     <ion-card-content>
@@ -22,77 +86,65 @@
           clearInput>
         </ion-input>
       </ion-item>
-<ion-item>
+
+      <ion-item>
         <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
         <ion-label position="stacked">Senha do Wi-Fi</ion-label>
-        
         <ion-input
           [type]="showPassword ? 'text' : 'password'"
           [(ngModel)]="wifiPASS"
           placeholder="********"
           clearInput>
         </ion-input>
-
-        <ion-button 
-          slot="end" 
-          fill="clear" 
-          (click)="togglePassword()" 
+        <ion-button
+          slot="end"
+          fill="clear"
+          (click)="togglePassword()"
           class="ion-no-margin"
           style="margin-top: 15px;">
-          <ion-icon 
-            slot="icon-only" 
-            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'">
-          </ion-icon>
+          <ion-icon slot="icon-only" [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
         </ion-button>
       </ion-item>
 
+   
       <ion-button
         expand="block"
         color="light"
         class="ion-margin-top"
-        (click)="configurarNovaMao()"
+        (click)="configurarWifi()"
         [disabled]="isConfiguring">
-
         <ion-spinner *ngIf="isConfiguring" slot="start"></ion-spinner>
-        <ion-icon
-          *ngIf="!isConfiguring"
-          slot="start"
-          name="bluetooth-outline">
-        </ion-icon>
-
-        {{ isConfiguring ? statusConfig : 'Enviar via Bluetooth' }}
+        <ion-icon *ngIf="!isConfiguring" slot="start" name="bluetooth-outline"></ion-icon>
+        {{ isConfiguring ? statusConfig : 'Enviar Wi-Fi via Bluetooth' }}
       </ion-button>
 
-      <!--botão de resetar wifi-->
+      <!-- Resetar Wi-Fi -->
       <ion-button
-      expand="block"
-      color="light"
-      class="ion-margin-top"
-      (click)="desparelhar()"
-      [disabled]="isConfiguring">
-      <ion-spinner *ngIf="isConfiguring" slot="start"></ion-spinner>
-      <ion-icon>
-      slot="start"
-      name="bluetooth-outline">
-      *ngIf="!isConfiguring"
-      slot="start"
-      name="bluetooth-outline">
-      </ion-icon>
-
-      {{ isConfiguring ? statusConfig : 'Resetar Wi-Fi' }}
+        expand="block"
+        color="warning"
+        fill="outline"
+        class="ion-margin-top"
+        (click)="resetarWifi()"
+        [disabled]="isConfiguring">
+        <ion-icon slot="start" name="refresh-outline"></ion-icon>
+        Resetar Wi-Fi
       </ion-button>
 
     </ion-card-content>
-    </ion-card>
+  </ion-card>
 
-  <!-- CONEXÃO DIRETA VIA WIFI -->
+
+  
   <ion-card color="light">
     <ion-card-header>
-      <ion-card-title>Conexão Direta (Wi-Fi)</ion-card-title>
+      <ion-card-title>
+        <ion-icon name="globe-outline" style="vertical-align: middle; margin-right: 6px;"></ion-icon>
+        Endereço Wi-Fi (IP / mDNS)
+      </ion-card-title>
+      <ion-card-subtitle>Usado pelo controle quando no modo Wi-Fi</ion-card-subtitle>
     </ion-card-header>
 
     <ion-card-content>
-
       <ion-item>
         <ion-icon slot="start" name="globe-outline"></ion-icon>
         <ion-label position="stacked">Endereço (IP ou mDNS)</ion-label>
@@ -107,13 +159,10 @@
         expand="block"
         class="ion-margin-top"
         (click)="salvarIP()">
-
         <ion-icon slot="start" name="save-outline"></ion-icon>
-
+        Salvar Endereço
       </ion-button>
-
     </ion-card-content>
   </ion-card>
-
 
 </ion-content>
