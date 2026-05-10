@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -7,7 +7,7 @@ import {
   IonLabel, IonBackButton, IonButtons, IonSelect, IonSelectOption, IonCheckbox, IonNote
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
-import { ToastController, AlertController } from '@ionic/angular';
+import { ToastController, AlertController } from '@ionic/angular/standalone';
 import { Auth, createUserWithEmailAndPassword, authState } from '@angular/fire/auth';
 import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { Database } from '../services/database';
@@ -60,7 +60,8 @@ export class CadastroPage implements OnInit {
     private alertController: AlertController,
     private auth: Auth,
     private firestore: Firestore,
-    private database: Database
+    private database: Database,
+    private ngZone: NgZone,
   ) {
     addIcons({ chevronDownOutline, chevronForwardOutline, checkmarkOutline });
   }
@@ -147,14 +148,9 @@ export class CadastroPage implements OnInit {
 
       await this.showToast('Cadastro realizado com sucesso!');
 
-    
-      await firstValueFrom(
-        authState(this.auth).pipe(
-          filter(u => !!u) 
-        )
-      );
-
-      await this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+      this.ngZone.run(() => {
+        this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
+      });
 
     } catch (error: any) {
       console.error('Erro no cadastro:', error);

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -7,7 +7,7 @@ import {
   IonLabel, IonInput, IonButton, IonIcon
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+import { ToastController } from '@ionic/angular/standalone';
 import {
   Auth,
   signInWithEmailAndPassword,
@@ -32,11 +32,12 @@ import { Database } from '../services/database';
     IonCardContent, IonItem, IonLabel, IonInput, IonButton, IonIcon
   ]
 })
-export class LoginPage implements OnInit {
+export class LoginPage implements OnInit, OnDestroy {
   email: string = '';
   password: string = '';
-  // Flag para evitar redirecionamento duplo durante fluxo de login ativo
   private processandoLogin = false;
+  
+  private authUnsubscribe: (() => void) | null = null;
 
   constructor(
     private router: Router,
@@ -49,12 +50,20 @@ export class LoginPage implements OnInit {
   }
 
   ngOnInit() {
-    const unsubscribe = onAuthStateChanged(this.auth, async (user) => {
+    
+    this.authUnsubscribe = onAuthStateChanged(this.auth, async (user) => {
       if (user && !this.processandoLogin) {
-        unsubscribe();
         await this.redirecionarPosLogin(user.uid);
       }
     });
+  }
+
+  ngOnDestroy() {
+    
+    if (this.authUnsubscribe) {
+      this.authUnsubscribe();
+      this.authUnsubscribe = null;
+    }
   }
 
   private async redirecionarPosLogin(uid: string) {
@@ -67,7 +76,6 @@ export class LoginPage implements OnInit {
         this.database.setUser(userData);
         await this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
       } else {
-        // Usuário autenticado mas sem cadastro completo — vai para cadastro
         await this.router.navigate(['/cadastro'], { replaceUrl: true });
       }
     } catch (error) {
