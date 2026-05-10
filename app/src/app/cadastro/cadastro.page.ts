@@ -8,12 +8,13 @@ import {
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { ToastController, AlertController } from '@ionic/angular';
-
-// --- IMPORTS DO FIREBASE ---
-import { Auth, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, getDoc } from '@angular/fire/firestore';
-
-const USERNAME_REGEX = /^[a-z0-9_.]{3,20}$/;
+import { Auth, createUserWithEmailAndPassword, authState } from '@angular/fire/auth';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { Database } from '../services/database';
+import { addIcons } from 'ionicons';
+import { chevronDownOutline, chevronForwardOutline, checkmarkOutline } from 'ionicons/icons';
+import { firstValueFrom } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-cadastro',
@@ -29,12 +30,12 @@ const USERNAME_REGEX = /^[a-z0-9_.]{3,20}$/;
 })
 export class CadastroPage implements OnInit {
 
-  newPassword: string = '';
-  confirmPassword: string = '';
-  googleFlow: boolean = false;
+  newPassword = '';
+  confirmPassword = '';
+  googleFlow = false;
+  isLoading = false;
 
   dados = {
-    username: '',
     nomeCompleto: '',
     genero: '',
     telefone: '',
@@ -57,74 +58,74 @@ export class CadastroPage implements OnInit {
     private router: Router,
     private toastController: ToastController,
     private alertController: AlertController,
-    private auth: Auth,           
-    private firestore: Firestore   
-  ) { }
+    private auth: Auth,
+    private firestore: Firestore,
+    private database: Database
+  ) {
+    addIcons({ chevronDownOutline, chevronForwardOutline, checkmarkOutline });
+  }
 
   ngOnInit() {
-    onAuthStateChanged(this.auth, async (user) => {
-      if (!user) {
-        this.googleFlow = false;
-        return;
-      }
-
-      const docRef = doc(this.firestore, 'usuarios', user.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        this.router.navigate(['/tabs/tab1']);
-      } else {
-        this.googleFlow = true;
-        this.dados.email = user.email || '';
-        this.dados.nomeCompleto = user.displayName || '';
-      }
-    });
+    const currentUser = this.auth.currentUser;
+    if (currentUser) {
+      this.googleFlow = true;
+      this.dados.email = currentUser.email || '';
+      this.dados.nomeCompleto = currentUser.displayName || '';
+    }
   }
 
   async register() {
-
     if (!this.dados.termsAccepted) {
       this.showToast('Você precisa aceitar os termos de uso.');
       return;
     }
 
-    const username = (this.dados.username || '').trim().toLowerCase();
-    this.dados.username = username;
-
-    if (!USERNAME_REGEX.test(username)) {
-      this.showToast('Username deve ter 3-20 caracteres (letras, números, _ ou .).');
+    if (!this.dados.nomeCompleto.trim()) {
+      this.showToast('Preencha o nome completo.');
       return;
     }
 
-    if (!this.googleFlow && this.newPassword !== this.confirmPassword) {
-      this.showToast('As senhas não coincidem.');
+    if (!this.dados.email.trim()) {
+      this.showToast('Preencha o e-mail.');
       return;
     }
+
+    if (this.isLoading) return;
+    this.isLoading = true;
 
     try {
-      const usernameRef = doc(this.firestore, 'usernames', username);
-      const usernameSnap = await getDoc(usernameRef);
-      if (usernameSnap.exists()) {
-        this.showToast('Este username já está em uso.');
-        return;
-      }
-
       let uid: string;
 
-      if (this.googleFlow && this.auth.currentUser) {
+      if (this.googleFlow) {
+        if (!this.auth.currentUser) {
+          this.showToast('Erro: Sessão do Google não encontrada. Faça login novamente.');
+          this.isLoading = false;
+          return;
+        }
         uid = this.auth.currentUser.uid;
       } else {
+        if (!this.newPassword || this.newPassword !== this.confirmPassword) {
+          this.showToast('As senhas não coincidem.');
+          this.isLoading = false;
+          return;
+        }
+
+        if (this.newPassword.length < 6) {
+          this.showToast('A senha deve ter pelo menos 6 caracteres.');
+          this.isLoading = false;
+          return;
+        }
+
         const userCredential = await createUserWithEmailAndPassword(
           this.auth,
-          this.dados.email,
+          this.dados.email.trim(),
           this.newPassword
         );
         uid = userCredential.user.uid;
       }
 
-      await setDoc(doc(this.firestore, 'usuarios', uid), {
-        username,
-        nomeCompleto: this.dados.nomeCompleto,
+      const dadosParaSalvar = {
+        nomeCompleto: this.dados.nomeCompleto.trim(),
         genero: this.dados.genero,
         telefone: this.dados.telefone,
         tipoProfissional: this.dados.tipoProfissional,
@@ -132,55 +133,58 @@ export class CadastroPage implements OnInit {
         uf: this.dados.uf,
         cpf: this.dados.cpf,
         especialidade: this.dados.especialidade,
-        email: this.dados.email,
+        email: this.dados.email.toLowerCase().trim(),
         projeto: 'Luy-83',
         dataCriacao: new Date().toISOString(),
-        provider: this.googleFlow ? 'google' : 'email'
-      });
+        provider: this.googleFlow ? 'google' : 'email',
+        uid: uid,
+        firstLogin: true
+      };
 
-      await setDoc(usernameRef, {
-        uid,
-        email: this.dados.email
-      });
+      await setDoc(doc(this.firestore, 'usuarios', uid), dadosParaSalvar);
+
+      this.database.setUser(dadosParaSalvar);
 
       await this.showToast('Cadastro realizado com sucesso!');
 
-      if (this.googleFlow) {
-        this.router.navigate(['/tabs/tab1']);
-      } else {
-        this.router.navigate(['/login']);
-      }
+    
+      await firstValueFrom(
+        authState(this.auth).pipe(
+          filter(u => !!u) 
+        )
+      );
+
+      await this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
 
     } catch (error: any) {
-      let mensagem = 'Erro ao cadastrar';
-
+      console.error('Erro no cadastro:', error);
+      let mensagem = 'Erro ao cadastrar. Tente novamente.';
       if (error.code === 'auth/email-already-in-use') mensagem = 'Este e-mail já está em uso.';
-      if (error.code === 'auth/weak-password') mensagem = 'A senha deve ter pelo no mínimo 6 caracteres.';
+      if (error.code === 'auth/weak-password') mensagem = 'A senha é muito fraca. Use ao menos 6 caracteres.';
       if (error.code === 'auth/invalid-email') mensagem = 'E-mail inválido.';
-
       this.showToast(mensagem);
-      console.error('Erro Firebase:', error);
+    } finally {
+      this.isLoading = false;
     }
-  }
-
-  async trocarConta() {
-    await signOut(this.auth);
-    this.googleFlow = false;
-    this.dados.email = '';
-    this.dados.nomeCompleto = '';
-    this.dados.username = '';
-    this.newPassword = '';
-    this.confirmPassword = '';
-    this.showToast('Sessão encerrada. Você pode criar um cadastro novo.');
   }
 
   async mostrarTermos() {
     const alert = await this.alertController.create({
-      header: 'Termos de Uso e Política de Privacidade',
-      message: 'Este aplicativo é uma ferramenta de auxílio à triagem remota. As medições realizadas pela mão robótica Luy-83 devem ser conferidas pelo profissional responsável. O uso deste sistema implica na aceitação dos termos de privacidade e proteção de dados (LGPD). Os dados pessoais coletados serão utilizados exclusivamente para fins de identificação profissional e operação do sistema.',
+      header: 'Termos de Uso',
+      message: 'Este aplicativo é uma ferramenta de auxílio à triagem remota. As medições realizadas pela mão robótica Luy-83 devem ser conferidas pelo profissional responsável. O uso deste sistema implica na aceitação dos termos de privacidade e proteção de dados (LGPD).',
       buttons: ['Entendi']
     });
     await alert.present();
+  }
+
+  async trocarConta() {
+    const { signOut } = await import('@angular/fire/auth');
+    await signOut(this.auth);
+    this.googleFlow = false;
+    this.dados.email = '';
+    this.dados.nomeCompleto = '';
+    this.showToast('Sessão encerrada.');
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   formatarCpf(event: any) {

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "566013437219",
+    "project_id": "luy-83",
+    "storage_bucket": "luy-83.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566013437219:android:d3a24d91b40c2671bf9896",
+        "android_client_info": {
+          "package_name": "io.ionic.starter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "566013437219-oc11nmsmfrro6ebuldihojr6rdsqr1t3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.ionic.starter",
+            "certificate_hash": "8d0c88e0ecc3879292123c5d779d872ceb145130"
+          }
+        },
+        {
+          "client_id": "566013437219-m5fdi6mvrudcgehajhb98vmvqj7rknuu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCg0XWBetv-Bc7QeYQJ5fuIKxTcembYYkE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "566013437219-m5fdi6mvrudcgehajhb98vmvqj7rknuu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

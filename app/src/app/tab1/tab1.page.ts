@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonButtons } from '@ionic/angular/standalone';
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader,
+  IonCardTitle, IonCardContent, IonButton, IonIcon, IonButtons
+} from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { Database } from '../services/database';
 import { AlertController } from '@ionic/angular';
@@ -15,7 +18,10 @@ import {
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonButtons]
+  imports: [
+    CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
+    IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonButtons
+  ]
 })
 export class Tab1Page implements OnInit {
   user: any = null;
@@ -45,10 +51,10 @@ export class Tab1Page implements OnInit {
 
   getNomeCurto(): string {
     if (this.user?.nomeCompleto) {
-      const partes = this.user.nomeCompleto.split(' ');
+      const partes = this.user.nomeCompleto.trim().split(' ');
       return partes[0];
     }
-    return this.user?.username || 'Usuário';
+    return this.user?.email?.split('@')[0] || 'Usuário';
   }
 
   async verificarPrimeiroLogin() {

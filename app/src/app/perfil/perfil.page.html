@@ -15,7 +15,7 @@
       <div class="perfil-avatar">
         <ion-icon name="person-circle" class="avatar-icon"></ion-icon>
       </div>
-      <ion-card-title class="perfil-nome">{{ user?.nomeCompleto || user?.username }}</ion-card-title>
+      <ion-card-title class="perfil-nome">{{ user?.nomeCompleto || 'Usuário' }}</ion-card-title>
       <p class="perfil-subtitulo tag" *ngIf="user?.tipoProfissional">
         {{ user?.tipoProfissional === 'enfermeiro' ? 'Enfermeiro(a)' : 'Médico(a)' }}
       </p>

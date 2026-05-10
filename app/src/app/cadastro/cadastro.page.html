@@ -21,7 +21,7 @@
           </ion-button>
         </div>
 
-        <form (ngSubmit)="register()">
+        <form novalidate>
 
           <div class="input-container">
             <ion-label class="custom-label">Nome Completo</ion-label>
@@ -33,7 +33,7 @@
           <div class="input-container">
             <ion-label class="custom-label">Email</ion-label>
             <div class="custom-input-box">
-              <ion-input [(ngModel)]="dados.email" name="email" type="email" required [readonly]="googleFlow"></ion-input>
+              <ion-input [(ngModel)]="dados.email" name="email" type="email" required [readonly]="googleFlow" autocapitalize="off"></ion-input>
             </div>
           </div>
 
@@ -54,7 +54,7 @@
           <div class="input-container">
             <ion-label class="custom-label">Gênero</ion-label>
             <div class="custom-input-box">
-              <ion-select [(ngModel)]="dados.genero" name="genero" interface="popover" toggle-icon="chevron-down-outline" placeholder="Selecione">
+              <ion-select [(ngModel)]="dados.genero" name="genero" interface="popover" placeholder="Selecione">
                 <ion-select-option value="masculino">Masculino</ion-select-option>
                 <ion-select-option value="feminino">Feminino</ion-select-option>
                 <ion-select-option value="outro">Outro</ion-select-option>
@@ -116,14 +116,6 @@
             </div>
           </div>
 
-          <div class="input-container">
-            <ion-label class="custom-label">Username</ion-label>
-            <div class="custom-input-box">
-              <ion-input [(ngModel)]="dados.username" name="username" required maxlength="20" autocapitalize="off"></ion-input>
-            </div>
-            <small class="field-hint">3-20 caracteres, apenas letras, números, _ ou .</small>
-          </div>
-
           <div class="input-container" *ngIf="!googleFlow">
             <ion-label class="custom-label">Senha</ion-label>
             <div class="custom-input-box">
@@ -149,9 +141,13 @@
             </ion-checkbox>
           </div>
 
-          <ion-button expand="block" type="submit" class="btn-finish"
-            [disabled]="!dados.username || !dados.email || !dados.nomeCompleto || !dados.cpf || !dados.termsAccepted || (!googleFlow && (!newPassword || newPassword !== confirmPassword))">
-            Finalizar Cadastro
+          <ion-button
+            expand="block"
+            type="button"
+            class="btn-finish"
+            (click)="register()"
+            [disabled]="isLoading">
+            {{ isLoading ? 'AGUARDE...' : 'FINALIZAR CADASTRO' }}
           </ion-button>
 
         </form>

@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonItem, IonLabel, IonList, IonButtons, IonBackButton, IonInput } from '@ionic/angular/standalone';
+import {
+  IonContent, IonHeader, IonTitle, IonToolbar, IonCard, IonCardHeader,
+  IonCardTitle, IonCardContent, IonButton, IonIcon, IonItem, IonLabel,
+  IonList, IonButtons, IonBackButton, IonInput
+} from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { AlertController, ToastController } from '@ionic/angular';
 import { Database } from '../services/database';
@@ -16,7 +20,11 @@ import {
   templateUrl: './perfil.page.html',
   styleUrls: ['./perfil.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonContent, IonHeader, IonTitle, IonToolbar, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon, IonItem, IonLabel, IonList, IonButtons, IonBackButton, IonInput]
+  imports: [
+    CommonModule, FormsModule, IonContent, IonHeader, IonTitle, IonToolbar,
+    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonButton, IonIcon,
+    IonItem, IonLabel, IonList, IonButtons, IonBackButton, IonInput
+  ]
 })
 export class PerfilPage implements OnInit {
   user: any = null;
@@ -77,24 +85,22 @@ export class PerfilPage implements OnInit {
           text: 'Deletar',
           cssClass: 'alert-button-danger',
           handler: async (data) => {
-            if (data.senha === this.user?.password) {
+            try {
               await this.database.deleteAccount();
               const toast = await this.toastController.create({
                 message: 'Conta deletada com sucesso.',
                 duration: 2000
               });
               await toast.present();
-              this.router.navigate(['/login']);
-            } else {
+              this.router.navigate(['/login'], { replaceUrl: true });
+            } catch (error: any) {
               const toast = await this.toastController.create({
-                message: 'Senha incorreta.',
+                message: error.message || 'Erro ao deletar conta.',
                 duration: 2000,
                 color: 'danger'
               });
               await toast.present();
-              return false;
             }
-            return;
           }
         }
       ]

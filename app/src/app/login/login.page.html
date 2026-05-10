@@ -10,9 +10,9 @@
 
         <form (ngSubmit)="login()">
           <div class="input-container">
-            <ion-label class="custom-label">Username</ion-label>
+            <ion-label class="custom-label">E-mail</ion-label>
             <div class="custom-input-box">
-              <ion-input [(ngModel)]="username" name="username" required autocapitalize="off"></ion-input>
+              <ion-input [(ngModel)]="email" name="email" type="email" required autocapitalize="off"></ion-input>
             </div>
           </div>
 
@@ -27,15 +27,15 @@
             Esqueci minha senha
           </ion-button>
 
-          <ion-button expand="block" type="submit" class="btn-primary-blue" [disabled]="!username || !password">
+          <ion-button expand="block" type="submit" class="btn-primary-blue" [disabled]="!email || !password">
             ENTRAR
           </ion-button>
         </form>
 
-        <div class="google-login-section" (click)="loginComGoogle()">
-          <ion-icon name="logo-google" class="google-icon"></ion-icon>
+        <ion-button expand="block" fill="outline" class="btn-google" (click)="loginComGoogle()">
+          <ion-icon slot="start" name="logo-google"></ion-icon>
           <ion-label>Entrar com o Google</ion-label>
-        </div>
+        </ion-button>
 
         <div class="footer-links">
           <p>
