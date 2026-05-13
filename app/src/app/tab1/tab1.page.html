@@ -1,102 +1,62 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar color="primary">
-    <ion-title>Home</ion-title>
+    <ion-title>Início</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="irParaPerfil()" class="profile-btn">
-        <ion-icon name="settings-outline" slot="icon-only"></ion-icon>
+      <ion-button (click)="irParaPerfil()">
+        <ion-icon name="people-outline" slot="icon-only" class="pessoa"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="home-content">
-  <ion-header collapse="condense">
-    <ion-toolbar color="primary">
-      <ion-title size="large">Home</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true">
+  <div class="main-container">
 
-  <!-- Saudação -->
-  <div class="greeting-section">
-    <h1 class="greeting-text">Olá, Dr(a) {{ getNomeCurto() }}</h1>
+    <div class="greeting-section">
+      <h1 class="greeting-text">Olá, Dr(a) {{ getNomeCurto() }}</h1>
+    </div>
+    <div class="info-list-container">
+
+      <div class="info-row">
+        <ion-icon name="wifi-outline" class="info-icon"></ion-icon>
+        <div class="info-text">
+          <h3>Conexão</h3>
+          <p>Certifique-se de que a mão mecânica está ligada e conectada via Wi-Fi antes de iniciar.</p>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <ion-icon name="hand-left-outline" class="info-icon"></ion-icon>
+        <div class="info-text">
+          <h3>Calibração</h3>
+          <p>Verifique se os dedos estão na posição inicial antes de usar.</p>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <ion-icon name="people-outline" class="info-icon"></ion-icon>
+        <div class="info-text">
+          <h3>Selecionar Paciente</h3>
+          <p>Selecione um paciente já registrado antes de iniciar as medições.</p>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <ion-icon name="game-controller-outline" class="info-icon"></ion-icon>
+        <div class="info-text">
+          <h3>Modo Controle</h3>
+          <p>Para testes, use o modo controle para fazer alguns gestos antes de iniciar a medição.</p>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <ion-icon name="pulse-outline" class="info-icon"></ion-icon>
+        <div class="info-text">
+          <h3>Objetivo da Triagem</h3>
+          <p>Este sistema permite medições de sinais vitais a distância através da mão robótica Luy-83.</p>
+        </div>
+      </div>
+
+    </div>
   </div>
-
-  <!-- Status de Conexão -->
-  <div class="connection-badge" [class.connected]="isConnected" [class.disconnected]="!isConnected">
-    <span class="status-dot"></span>
-    <span>{{ isConnected ? 'Conectado' : 'Desconectado' }}</span>
-  </div>
-
-  <!-- Cards de Informação Rápida -->
-  <div class="info-cards-section">
-    <h2 class="section-title">Informações Rápidas</h2>
-
-    <ion-card class="info-card">
-      <ion-card-content>
-        <div class="card-row">
-          <ion-icon name="wifi-outline" color="primary" class="card-icon"></ion-icon>
-          <div>
-            <h3>Conexão</h3>
-            <p>Certifique-se de que a mão mecânica está ligada e conectada via Wi-Fi antes de iniciar.</p>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="info-card">
-      <ion-card-content>
-        <div class="card-row">
-          <ion-icon name="hand-left-outline" color="primary" class="card-icon"></ion-icon>
-          <div>
-            <h3>Calibração</h3>
-            <p>Verifique se os dedos estão na posição inicial antes de usar.</p>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="info-card">
-      <ion-card-content>
-        <div class="card-row">
-          <ion-icon name="people-outline" color="primary" class="card-icon"></ion-icon>
-          <div>
-            <h3>Selecionar Paciente</h3>
-            <p>Selecione um paciente já registrado antes de iniciar as medições.</p>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="info-card">
-      <ion-card-content>
-        <div class="card-row">
-          <ion-icon name="game-controller-outline" color="primary" class="card-icon"></ion-icon>
-          <div>
-            <h3>Modo Controle</h3>
-            <p>Para testes, use o modo controle para fazer alguns gestos antes de iniciar a medição.</p>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="info-card">
-      <ion-card-content>
-        <div class="card-row">
-          <ion-icon name="pulse-outline" color="primary" class="card-icon"></ion-icon>
-          <div>
-            <h3>Objetivo da Triagem</h3>
-            <p>Este sistema permite medições de sinais vitais a distância através da mão robótica Luy-83.</p>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
-  </div>
-
-  <div class="logout-section">
-    <ion-button expand="block" fill="outline" color="medium" (click)="logout()">
-      <ion-icon name="log-out-outline" slot="start"></ion-icon>
-      Sair
-    </ion-button>
-  </div>
-
 </ion-content>
