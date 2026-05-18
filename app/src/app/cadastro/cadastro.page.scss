@@ -1,5 +1,7 @@
 .auth-wrapper {
   --background: #E8EDF8;
+  padding: 20px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
 
   .container-central {
     padding: 20px 15px;
