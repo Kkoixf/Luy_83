@@ -44,7 +44,7 @@ export class Tab2Page {
 
   sensores = [
     { nome: 'Temperatura',  tipo: 'Medir_Temperatura', icone: 'thermometer-outline'       },
-    { nome: 'Oxigenação',   tipo: 'Medir_Oxigenacao',  icone: 'leaf-outline'              },
+    { nome: 'Cardíaco-SpO2',   tipo: 'Medir_Cardiaco',  icone: 'heart-half'              },
     { nome: 'Batimentos',   tipo: 'Medir_Batimentos',  icone: 'heart-half'                },
     { nome: 'Opção Gestos', tipo: 'Opcao_Gestos',      icone: 'arrow-redo-circle-outline' }
   ];
@@ -91,7 +91,8 @@ export class Tab2Page {
         await this.bleService.enviarComando(tipo);
       } else {
         const url = `http://${this.ipEsp32}/executar?tipo=${tipo}`;
-        const response = await CapacitorHttp.get({ url });
+        const response = await CapacitorHttp.get({ url, connectTimeout: 15000,
+  readTimeout: 15000 });
 
         if (tipo.includes('Medir') && response.data) {
           await this.databaseService.adicionarMedicao({
