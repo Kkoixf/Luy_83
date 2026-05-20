@@ -41,8 +41,22 @@ export class Tab3Page {
   novoPaciente = { nome: '', cpf: '', dataNasc: '' };
 
   // Lista local para exibição
-  pacientes: any[] = [];
-  pacientesFiltrados: any[] = [];
+ pacientes: any[] = [
+    { id: 1, nome: 'João Silva', cpf: '123.456.789-00', dataNasc: '01/01/1980',
+      medicoes: [
+        { data: '2024-06-01 10:00', tipo: 'Batimentos', valor: 72, historico: [70, 71, 72, 73, 72, 72] },
+        { data: '2024-06-02 10:00', tipo: 'Batimentos', valor: 75, historico: [71, 72, 74, 75, 75, 75] }]
+    }
+ 
+  ];
+  pacientesFiltrados: any[] = [
+    { id: 1, nome: 'João Silva', cpf: '123.456.789-00', dataNasc: '01/01/1980',
+      medicoes: [
+        { data: '2024-06-01 10:00', tipo: 'Batimentos', valor: 72, historico: [70, 71, 72, 73, 72, 72] },
+        { data: '2024-06-02 10:00', tipo: 'Batimentos', valor: 75, historico: [71, 72, 74, 75, 75, 75] }]
+    }
+ 
+  ];
 
   indiceMedicao = 0;
 

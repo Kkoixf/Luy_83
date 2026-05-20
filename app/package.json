@@ -39,6 +39,7 @@
     "firebase": "^12.12.1",
     "ionicons": "^7.0.0",
     "jeep-sqlite": "^2.8.0",
+    "jspdf": "^4.2.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
