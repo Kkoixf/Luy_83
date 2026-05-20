@@ -54,6 +54,19 @@ export class CadastroPage implements OnInit {
     'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
   ];
 
+  especialidadesMedicas = [
+    'Alergologia', 'Anestesiologia', 'Angiologia', 'Cardiologia',
+    'Cirurgia Geral', 'Cirurgia Plástica', 'Cirurgia Vascular',
+    'Clínica Médica', 'Dermatologia', 'Endocrinologia',
+    'Gastroenterologia', 'Geriatria', 'Ginecologia e Obstetrícia',
+    'Hematologia', 'Infectologia', 'Mastologia', 'Medicina de Família',
+    'Medicina do Trabalho', 'Medicina Esportiva', 'Medicina Intensiva',
+    'Nefrologia', 'Neurocirurgia', 'Neurologia', 'Nutrologia',
+    'Oftalmologia', 'Oncologia', 'Ortopedia e Traumatologia',
+    'Otorrinolaringologia', 'Patologia', 'Pediatria', 'Pneumologia',
+    'Psiquiatria', 'Radiologia', 'Reumatologia', 'Urologia', 'Outra'
+  ];
+
   constructor(
     private router: Router,
     private toastController: ToastController,
@@ -111,8 +124,8 @@ export class CadastroPage implements OnInit {
           return;
         }
 
-        if (this.newPassword.length < 6) {
-          this.showToast('A senha deve ter pelo menos 6 caracteres.');
+        if (!this.senhaForte(this.newPassword)) {
+          this.showToast('Senha fraca. Use 8+ caracteres com maiúscula, minúscula, número e caractere especial.');
           this.isLoading = false;
           return;
         }
@@ -184,7 +197,7 @@ export class CadastroPage implements OnInit {
   }
 
   formatarCpf(event: any) {
-    let value = event.target.value.replace(/\D/g, '');
+    let value = (event.target.value || '').replace(/\D/g, '');
     if (value.length > 11) value = value.substring(0, 11);
     if (value.length > 9) {
       value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
@@ -194,10 +207,11 @@ export class CadastroPage implements OnInit {
       value = value.replace(/(\d{3})(\d{1,3})/, '$1.$2');
     }
     this.dados.cpf = value;
+    if (event.target) event.target.value = value;
   }
 
   formatarTelefone(event: any) {
-    let value = event.target.value.replace(/\D/g, '');
+    let value = (event.target.value || '').replace(/\D/g, '');
     if (value.length > 11) value = value.substring(0, 11);
     if (value.length > 6) {
       value = value.replace(/(\d{2})(\d{5})(\d{1,4})/, '($1) $2-$3');
@@ -205,6 +219,33 @@ export class CadastroPage implements OnInit {
       value = value.replace(/(\d{2})(\d{1,5})/, '($1) $2');
     }
     this.dados.telefone = value;
+    if (event.target) event.target.value = value;
+  }
+
+  apenasNumeros(event: KeyboardEvent) {
+    const tecla = event.key;
+    if (tecla.length === 1 && !/^\d$/.test(tecla)) {
+      event.preventDefault();
+    }
+  }
+
+  private senhaForte(senha: string): boolean {
+    return senha.length >= 8 &&
+      /[A-Z]/.test(senha) &&
+      /[a-z]/.test(senha) &&
+      /\d/.test(senha) &&
+      /[^A-Za-z0-9]/.test(senha);
+  }
+
+  get senhaValida() {
+    const s = this.newPassword || '';
+    return {
+      tamanho: s.length >= 8,
+      maiuscula: /[A-Z]/.test(s),
+      minuscula: /[a-z]/.test(s),
+      numero: /\d/.test(s),
+      especial: /[^A-Za-z0-9]/.test(s)
+    };
   }
 
   async showToast(message: string) {

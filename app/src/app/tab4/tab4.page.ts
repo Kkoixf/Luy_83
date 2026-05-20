@@ -38,6 +38,8 @@ export class Tab4Page implements OnInit {
   wifiPASS = '';
   showPassword = false;
   isConfiguring = false;
+  isResetting = false;
+  isSaving = false;
   statusConfig = '';
 
   // ── BLE (expõe os observáveis do serviço direto no template) ─────────────────
@@ -78,8 +80,15 @@ export class Tab4Page implements OnInit {
 
  
   async configurarWifi() {
+    if (this.isConfiguring) return;
+
     if (!this.wifiSSID.trim()) {
       alert('Preencha o nome da rede (SSID).');
+      return;
+    }
+
+    if (!this.bleService.conectado) {
+      alert('Conecte-se ao Luy via Bluetooth antes de enviar a configuração Wi-Fi.');
       return;
     }
 
@@ -87,17 +96,9 @@ export class Tab4Page implements OnInit {
     this.statusConfig = 'Enviando...';
 
     try {
-      // Garante que o BLE está conectado
-      if (!this.bleService.conectado) {
-        this.statusConfig = 'Procurando Luy...';
-        await this.bleService.conectar();
-      }
-
       const payload = `SSID:${this.wifiSSID};PASS:${this.wifiPASS}`;
       await this.bleService.enviarRaw(payload);
-
       alert('Configuração Wi-Fi enviada! Aguarde o Luy conectar à rede.');
-
     } catch (error: any) {
       alert('Erro: ' + (error?.message ?? error));
     } finally {
@@ -108,6 +109,9 @@ export class Tab4Page implements OnInit {
 
   // ── Resetar Wi-Fi do ESP32 ───────────────────────────────────────────────────
   async resetarWifi() {
+    if (this.isResetting) return;
+    this.isResetting = true;
+
     const host = this.ipEsp32.trim().replace('http://', '').replace('/', '');
     const url = `http://${host}/reset_wifi`;
     try {
@@ -119,12 +123,20 @@ export class Tab4Page implements OnInit {
       }
     } catch {
       alert('Erro ao resetar. Verifique a conexão Wi-Fi.');
+    } finally {
+      this.isResetting = false;
     }
   }
 
   // ── Salvar IP / mDNS ─────────────────────────────────────────────────────────
   async salvarIP() {
-    await Preferences.set({ key: 'ip_esp32', value: this.ipEsp32 });
-    alert('Endereço salvo! Use a aba Controle para enviar comandos.');
+    if (this.isSaving) return;
+    this.isSaving = true;
+    try {
+      await Preferences.set({ key: 'ip_esp32', value: this.ipEsp32 });
+      alert('Endereço salvo! Use a aba Controle para enviar comandos.');
+    } finally {
+      this.isSaving = false;
+    }
   }
 }

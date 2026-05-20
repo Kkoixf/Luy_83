@@ -95,6 +95,35 @@
         color: #d33;
         font-weight: 500;
       }
+
+      &.ok {
+        color: #1f9d55;
+        font-weight: 500;
+      }
+    }
+
+    .password-hint {
+      background: #FFF7E6;
+      border-left: 3px solid #F0A202;
+      color: #6b4a00;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-top: 6px;
+      line-height: 1.35;
+
+      code {
+        background: rgba(0,0,0,0.05);
+        padding: 1px 4px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+      }
+    }
+
+    .password-strength {
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 8px;
     }
   }
 

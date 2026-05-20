@@ -13,7 +13,28 @@
   <ion-card class="perfil-card">
     <ion-card-header>
       <div class="perfil-avatar">
-        <ion-icon name="person-circle" class="avatar-icon"></ion-icon>
+        <div class="avatar-wrapper" (click)="abrirSeletorFoto()">
+          <img *ngIf="fotoPerfil" [src]="fotoPerfil" alt="Foto de perfil" class="avatar-img" />
+          <ion-icon *ngIf="!fotoPerfil" name="person-circle" class="avatar-icon"></ion-icon>
+          <div class="avatar-edit">
+            <ion-icon name="camera-outline"></ion-icon>
+          </div>
+        </div>
+        <input
+          #fotoInput
+          type="file"
+          accept="image/*"
+          (change)="aoSelecionarFoto($event)"
+          hidden />
+        <ion-button
+          *ngIf="fotoPerfil"
+          fill="clear"
+          size="small"
+          color="light"
+          class="remover-foto-btn"
+          (click)="removerFoto()">
+          Remover foto
+        </ion-button>
       </div>
       <ion-card-title class="perfil-nome">{{ user?.nomeCompleto || 'Usuário' }}</ion-card-title>
       <p class="perfil-subtitulo tag" *ngIf="user?.tipoProfissional">
