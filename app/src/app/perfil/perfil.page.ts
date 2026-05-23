@@ -195,6 +195,25 @@ export class PerfilPage implements OnInit {
     await alert.present();
   }
 
+   async logout() {
+    const alert = await this.alertController.create({
+      header: 'Sair da conta',
+      message: 'Tem certeza que deseja encerrar sua sessão?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Sair',
+          role: 'destructive',
+          handler: async () => {
+            await this.database.logout();
+            this.router.navigate(['/login'], { replaceUrl: true });
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   async confirmarDeletarConta() {
     const alert = await this.alertController.create({
       header: 'Deletar Conta',
