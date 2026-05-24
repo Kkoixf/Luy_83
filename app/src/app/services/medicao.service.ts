@@ -44,7 +44,13 @@ export class MedicaoService {
     this._resultado$.next(r);
   }
 
+
+  apagaPacienteControle() {
+    this._paciente$.next(null);
+  }
+
   limpar() {
     this._resultado$.next(null);
+    
   }
 }

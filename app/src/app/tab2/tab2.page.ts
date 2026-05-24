@@ -92,9 +92,13 @@ export class Tab2Page {
     await Preferences.set({ key: 'modo_conexao', value: this.modoConexao });
   }
 
+
+
   async limparPaciente() {
     this.medicaoService.limpar();
     this.resultadoMedicao = null; 
+    this.medicaoService.apagaPacienteControle();
+    
   }
 
   async enviarComando(tipo: string) {
