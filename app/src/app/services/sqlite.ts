@@ -39,7 +39,6 @@ export class DatabaseService {
     }
   }
 
-
 async addPaciente(nome: string, cpf: string, dataNasc: string) {
 
   if (!this.db) {

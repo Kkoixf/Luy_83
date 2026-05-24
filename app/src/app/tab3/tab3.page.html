@@ -5,14 +5,15 @@
         <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
-  <!-- instala npm install chart.js -->
     <ion-title>
-      {{ viewMode === 'lista' ? 'Pacientes' : (viewMode === 'cadastro' ? 'Novo Cadastro' : 'Medições') }}
+      {{ viewMode === 'lista' ? 'Pacientes' :
+         viewMode === 'cadastro' ? 'Novo Cadastro' :
+         pacienteSelecionado?.nome || 'Detalhes' }}
     </ion-title>
   </ion-toolbar>
 
   <ion-toolbar color="primary" *ngIf="viewMode === 'lista'">
-    <ion-searchbar placeholder="Buscar paciente..." (ionInput)="buscar($event)"></ion-searchbar>
+    <ion-searchbar placeholder="Buscar por nome ou CPF..." (ionInput)="buscar($event)"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
@@ -20,17 +21,21 @@
 
   <div *ngIf="viewMode === 'lista'">
     <ion-list lines="none" class="ion-padding-bottom" style="background: transparent;">
-      <ion-item *ngFor="let p of pacientesFiltrados" class="paciente-card">
-        <ion-label (click)="verDetalhes(p)">
-          <h2>{{ p.nome }}</h2>
-          <p><strong>CPF:</strong> {{ p.cpf }}</p>
-          <p><strong>Nasc:</strong> {{ p.dataNasc }}</p>
+      <ion-item *ngFor="let p of pacientesFiltrados" class="paciente-card" button (click)="verDetalhes(p)">
+        <ion-icon slot="start" name="person-add-outline" color="primary" style="font-size: 1.6rem;"></ion-icon>
+        <ion-label>
+          <h2 style="font-weight: 600;">{{ p.nome }}</h2>
+          <p><strong>CPF:</strong> {{ p.cpf }} &nbsp;|&nbsp; <strong>Nasc:</strong> {{ p.data_nascimento || p.dataNasc }}</p>
         </ion-label>
-
-        <ion-button fill="clear" slot="end" (click)="deletarPaciente(p)">
+        <ion-button fill="clear" slot="end" (click)="deletarPaciente(p); $event.stopPropagation()">
           <ion-icon slot="icon-only" name="trash-outline" color="danger"></ion-icon>
         </ion-button>
       </ion-item>
+
+      <div *ngIf="pacientesFiltrados.length === 0" class="ion-text-center ion-padding" style="margin-top: 40px;">
+        <ion-icon name="person-add-outline" style="font-size: 3rem; color: #ccc;"></ion-icon>
+        <p style="color: #aaa; margin-top: 8px;">Nenhum paciente encontrado.</p>
+      </div>
     </ion-list>
   </div>
 
@@ -41,23 +46,17 @@
       </ion-card-header>
       <ion-card-content>
         <ion-item fill="outline" mode="md" class="ion-margin-bottom">
-       <ion-label position="stacked">Nome Completo</ion-label>
-      <ion-input 
-       type="text"
-       placeholder="Nome do paciente"
-       [(ngModel)]="novoPaciente.nome"> </ion-input>
-       </ion-item>
-        
+          <ion-label position="stacked">Nome Completo</ion-label>
+          <ion-input type="text" placeholder="Nome do paciente" [(ngModel)]="novoPaciente.nome"></ion-input>
+        </ion-item>
         <ion-item fill="outline" mode="md" class="ion-margin-bottom">
           <ion-label position="stacked">CPF</ion-label>
           <ion-input type="text" placeholder="000.000.000-00" [(ngModel)]="novoPaciente.cpf" (ionInput)="formatarCpf($event)"></ion-input>
         </ion-item>
-
         <ion-item fill="outline" mode="md" class="ion-margin-bottom">
           <ion-label position="stacked">Data de Nascimento</ion-label>
           <ion-input type="text" placeholder="00/00/0000" [(ngModel)]="novoPaciente.dataNasc" (ionInput)="formatoData($event)"></ion-input>
         </ion-item>
-
         <ion-button expand="block" (click)="salvarNovoPaciente()" class="ion-margin-top">
           Cadastrar Paciente
         </ion-button>
@@ -66,90 +65,111 @@
   </div>
 
   <div *ngIf="viewMode === 'detalhes'">
-    <div class="ion-padding-horizontal ion-margin-top" style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-      <h4 style="margin-bottom: 2px;">{{ pacienteSelecionado?.nome }}</h4>
-      <p style="font-size: 0.8rem; color: #666; margin: 0;">
-        CPF: {{ pacienteSelecionado?.cpf }} | Nasc: {{ pacienteSelecionado?.dataNasc }}
+
+    <div style="padding: 12px 16px 10px; border-bottom: 1px solid #e0e0e0; background: #f8f9ff;">
+      <p style="font-size: 0.78rem; color: #777; margin: 0;">
+        CPF: {{ pacienteSelecionado?.cpf }} &nbsp;·&nbsp; Nasc: {{ pacienteSelecionado?.dataNasc }}
       </p>
     </div>
 
-    <ion-card *ngIf="pacienteSelecionado?.medicoes?.length > 0; else semMedicao">
-      <ion-card-header class="ion-text-center">
-        <ion-badge color="primary">
-          Medição de {{ pacienteSelecionado.medicoes[indiceMedicao].data }}
-          <span *ngIf="pacienteSelecionado.medicoes[indiceMedicao].hora"> às {{ pacienteSelecionado.medicoes[indiceMedicao].hora }}</span>
-        </ion-badge>
-      </ion-card-header>
-
-      <ion-card-content>
-        <ion-list lines="none">
-          <ion-item>
-            <ion-icon name="water-outline" slot="start" color="primary"></ion-icon>
-            <ion-label>
-              <p>Oxímetro</p>
-              <h2><strong>{{ pacienteSelecionado.medicoes[indiceMedicao].oxigenio }}</strong></h2>
-            </ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-icon name="heart-outline" slot="start" color="danger"></ion-icon>
-            <ion-label>
-              <p>Batimento Cardíaco</p>
-              <h2><strong>{{ pacienteSelecionado.medicoes[indiceMedicao].batimentos }}</strong></h2>
-            </ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-icon name="thermometer-outline" slot="start" color="warning"></ion-icon>
-            <ion-label>
-              <p>Temperatura</p>
-              <h2><strong>{{ pacienteSelecionado.medicoes[indiceMedicao].temperatura }}</strong></h2>
-            </ion-label>
-          </ion-item>
-        </ion-list>
-
-        <div class="ion-margin-top" style="height: 200px; width: 100%;">
-          <canvas #lineChart></canvas>
-        </div>
-
-        <div class="ion-text-center ion-margin-top">
-          <p style="font-size: 0.9rem;">Página {{ indiceMedicao + 1 }} de {{ pacienteSelecionado.medicoes.length }}</p>
-          <ion-button fill="clear" [disabled]="indiceMedicao === 0" (click)="mudarPagina(-1)">
-            <ion-icon name="chevron-back-outline"></ion-icon>
-          </ion-button>
-          <ion-button fill="clear" [disabled]="indiceMedicao === pacienteSelecionado.medicoes.length - 1" (click)="mudarPagina(1)">
-            <ion-icon name="chevron-forward-outline"></ion-icon>
-          </ion-button>
-        </div>
-
-        <div style="display: flex; gap: 10px;" class="ion-margin-top">
-          <ion-button expand="block" fill="outline" color="danger" (click)="deletarMedicao(indiceMedicao)" style="flex: 1;">
-            <ion-icon slot="start" name="trash-outline"></ion-icon> Deletar
-          </ion-button>
-          <ion-button expand="block" fill="outline" (click)="baixarPDF(pacienteSelecionado.medicoes[indiceMedicao])" style="flex: 1;">
-            <ion-icon slot="start" name="download-outline"></ion-icon> PDF
-          </ion-button>
-        </div>
-      </ion-card-content>
-    </ion-card>
+    <div class="ion-padding-horizontal" style="padding-top: 14px; padding-bottom: 4px;">
+      <ion-button
+        expand="block"
+        color="success"
+        size="large"
+        mode="ios"
+        (click)="iniciarTriagem()"
+        style="font-size: 1rem; font-weight: 700; letter-spacing: 0.02em;">
+        <ion-icon slot="start" name="medkit-outline"></ion-icon>
+        Iniciar Triagem com Luy-83
+      </ion-button>
+    </div>
 
     <ng-template #semMedicao>
-      <div class="ion-padding ion-text-center">
-        <p>Nenhuma medição registrada para este paciente.</p>
+      <div class="ion-padding ion-text-center" style="margin-top: 24px;">
+        <ion-icon name="pulse-outline" style="font-size: 3rem; color: #ccc;"></ion-icon>
+        <p style="color: #888; margin-top: 8px;">Nenhuma medição registrada.</p>
+        <p style="font-size: 0.8rem; color: #aaa;">Clique em "Iniciar Triagem" para fazer a primeira leitura.</p>
       </div>
     </ng-template>
 
-    <div class="ion-padding">
-      <ion-button expand="block" color="success" mode="ios">
-        Iniciar Nova Medição (Luy)
-      </ion-button>
-    </div>
+    <ion-card *ngIf="pacienteSelecionado?.medicoes?.length > 0; else semMedicao" style="margin: 10px 12px;">
+      <ion-card-header style="padding-bottom: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <ion-badge color="primary" style="font-size: 0.78rem; padding: 5px 10px;">
+            {{ pacienteSelecionado.medicoes[indiceMedicao]?.data }}
+            <span *ngIf="pacienteSelecionado.medicoes[indiceMedicao]?.hora">
+              &nbsp;{{ pacienteSelecionado.medicoes[indiceMedicao].hora }}
+            </span>
+          </ion-badge>
+          <span style="font-size: 0.75rem; color: #888;">
+            Registro {{ indiceMedicao + 1 }} de {{ pacienteSelecionado.medicoes.length }}
+          </span>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <div style="flex:1; text-align:center; background:#fff0f3; border:1px solid #fcc; border-radius:10px; padding: 8px 4px;">
+            <ion-icon name="heart-outline" color="danger"></ion-icon>
+            <p style="margin:2px 0 0; font-size:1.4rem; font-weight:700; color:#e84c6a; line-height:1.1;">
+              {{ pacienteSelecionado.medicoes[indiceMedicao]?.batimentos ?? '—' }}
+            </p>
+            <p style="margin:0; font-size:0.62rem; color:#999;">BPM</p>
+          </div>
+          <div style="flex:1; text-align:center; background:#f0f8ff; border:1px solid #b3d9ff; border-radius:10px; padding: 8px 4px;">
+            <ion-icon name="water-outline" color="primary"></ion-icon>
+            <p style="margin:2px 0 0; font-size:1.4rem; font-weight:700; color:#3a7bd5; line-height:1.1;">
+              {{ pacienteSelecionado.medicoes[indiceMedicao]?.oxigenio ?? '—' }}
+            </p>
+            <p style="margin:0; font-size:0.62rem; color:#999;">SpO2 %</p>
+          </div>
+          <div style="flex:1; text-align:center; background:#fffbf0; border:1px solid #ffe180; border-radius:10px; padding: 8px 4px;">
+            <ion-icon name="thermometer-outline" color="warning"></ion-icon>
+            <p style="margin:2px 0 0; font-size:1.4rem; font-weight:700; color:#d4a017; line-height:1.1;">
+              {{ pacienteSelecionado.medicoes[indiceMedicao]?.temperatura ?? '—' }}
+            </p>
+            <p style="margin:0; font-size:0.62rem; color:#999;">°C</p>
+          </div>
+        </div>
+
+        <p style="font-size:0.75rem; color:#666; margin: 0 0 4px 2px;">Evolução Histórica do BPM</p>
+        <div style="height: 170px; width: 100%;">
+          <canvas #lineChart></canvas>
+        </div>
+
+        <div class="ion-text-center" style="margin-top: 4px;">
+          <ion-button fill="clear" size="small"
+            [disabled]="indiceMedicao === 0" (click)="mudarPagina(-1)">
+            <ion-icon name="chevron-back-outline"></ion-icon> Anterior
+          </ion-button>
+          <ion-button fill="clear" size="small"
+            [disabled]="indiceMedicao === pacienteSelecionado.medicoes.length - 1"
+            (click)="mudarPagina(1)">
+            Próximo <ion-icon name="chevron-forward-outline"></ion-icon>
+          </ion-button>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top: 6px;">
+          <ion-button expand="block" fill="outline" color="danger"
+            (click)="deletarMedicao(indiceMedicao)" style="flex:1;">
+            <ion-icon slot="start" name="trash-outline"></ion-icon> Excluir
+          </ion-button>
+          <ion-button expand="block" fill="outline"
+            (click)="baixarPDF(pacienteSelecionado.medicoes[indiceMedicao])" style="flex:1;">
+            <ion-icon slot="start" name="download-outline"></ion-icon> PDF
+          </ion-button>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+
   </div>
 
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="fab-custom" *ngIf="viewMode === 'lista'">
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="viewMode === 'lista'">
     <ion-fab-button (click)="abrirCadastro()" color="danger">
-      <div class="fab-content">
-        <ion-icon name="person-add-outline"></ion-icon>
-        <ion-text>Novo</ion-text>
-      </div>
+      <ion-icon name="person-add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 

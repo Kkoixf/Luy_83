@@ -2,15 +2,33 @@
   <ion-toolbar color="primary">
     <ion-title>Controle Luy-83</ion-title>
   </ion-toolbar>
+
+  <ion-toolbar *ngIf="pacienteAtivo$ | async as p" color="success">
+    <ion-icon slot="start" name="person-outline" color="light" style="margin-left: 12px;"></ion-icon>
+    <ion-title size="small" style="font-size: 0.85rem; color: white;">
+      Medindo para: <strong>{{ p.nome }}</strong>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="limparPaciente()" style="font-size: 0.75rem; color: rgba(255,255,255,0.8);">
+        Trocar
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
 
-  <!-- Toggle Wi-Fi / Bluetooth -->
-  <ion-segment
-    [(ngModel)]="modoConexao"
-    (ionChange)="onModoChange($event)"
-    color="primary"
+  <ion-item *ngIf="!(pacienteAtivo$ | async)" lines="none" color="warning"
+    style="border-radius: 10px; margin-bottom: 12px;">
+    <ion-icon slot="start" name="warning-outline"></ion-icon>
+    <ion-label style="font-size: 0.85rem;">
+      <strong>Nenhum paciente selecionado.</strong><br>
+      <span style="font-size: 0.78rem;">Vá à aba Pacientes, abra o perfil e clique em "Iniciar Triagem".</span>
+    </ion-label>
+  </ion-item>
+
+
+  <ion-segment [(ngModel)]="modoConexao" (ionChange)="onModoChange($event)" color="primary"
     style="margin-bottom: 12px;">
     <ion-segment-button value="wifi">
       <ion-icon name="wifi-outline"></ion-icon>
@@ -22,39 +40,81 @@
     </ion-segment-button>
   </ion-segment>
 
-  <!-- Info Wi-Fi -->
   <div *ngIf="modoConexao === 'wifi'">
     <ion-text color="medium">
-      <p style="font-size: 0.8rem; margin: 0 0 10px 4px;">Conectado em: {{ ipEsp32 }}</p>
+      <p style="font-size: 0.8rem; margin: 0 0 10px 4px;">IP: {{ ipEsp32 }}</p>
     </ion-text>
   </div>
 
-  <!-- Info Bluetooth -->
   <div *ngIf="modoConexao === 'bluetooth'">
-    <ion-item
-      lines="none"
-      [color]="(bleConectado$ | async) ? 'success' : 'warning'"
+    <ion-item lines="none" [color]="(bleConectado$ | async) ? 'success' : 'warning'"
       style="border-radius: 8px; margin-bottom: 10px;">
       <ion-icon slot="start" name="bluetooth-outline" color="light"></ion-icon>
       <ion-label color="light" style="font-size: 0.85rem;">{{ bleStatus$ | async }}</ion-label>
       <ion-spinner *ngIf="bleConectando$ | async" slot="end" name="crescent" color="light"></ion-spinner>
     </ion-item>
-    <ion-text *ngIf="!(bleConectado$ | async) && !(bleConectando$ | async)" color="medium">
-      <p style="font-size: 0.78rem; margin: 0 0 10px 4px;">
-        Conecte o Bluetooth na aba <strong>Conexão</strong> para usar os controles.
-      </p>
-    </ion-text>
   </div>
+
+  <!-- Indicador de medição em andamento -->
+  <ion-item *ngIf="medicaoIniciada" lines="none" color="primary"
+    style="border-radius: 8px; margin-bottom: 6px;">
+    <ion-spinner slot="start" name="crescent" color="light"></ion-spinner>
+    <ion-label color="light" style="font-size: 0.85rem;">{{ statusMedicao }}</ion-label>
+  </ion-item>
+
+  <!-- Log de diagnóstico -->
+  <div *ngIf="diagnostico" style="
+      background:#1a1a2e; border-radius:8px; padding:10px 12px;
+      margin-bottom:10px; font-family:monospace; font-size:0.72rem;
+      color:#a8e6cf; white-space:pre-wrap; max-height:130px; overflow-y:auto;">
+    {{ diagnostico }}
+  </div>
+
+  
+  <ion-card *ngIf="resultadoMedicao" style="border: 2px solid #2dd36f; border-radius: 12px; margin-bottom: 12px;">
+    <ion-card-header style="padding-bottom: 4px;">
+      <ion-badge color="success">Leitura concluída — confirme para salvar</ion-badge>
+    </ion-card-header>
+    <ion-card-content>
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <div style="flex:1; text-align:center; background:#fff0f3; border:1px solid #fcc; border-radius:10px; padding:8px 4px;">
+          <ion-icon name="heart-outline" color="danger"></ion-icon>
+          <p style="margin:2px 0 0; font-size:1.4rem; font-weight:700; color:#e84c6a;">{{ resultadoMedicao.bpm }}</p>
+          <p style="margin:0; font-size:0.62rem; color:#999;">BPM</p>
+        </div>
+        <div style="flex:1; text-align:center; background:#f0f8ff; border:1px solid #b3d9ff; border-radius:10px; padding:8px 4px;">
+          <ion-icon name="water-outline" color="primary"></ion-icon>
+          <p style="margin:2px 0 0; font-size:1.4rem; font-weight:700; color:#3a7bd5;">{{ resultadoMedicao.spo2 }}</p>
+          <p style="margin:0; font-size:0.62rem; color:#999;">SpO2 %</p>
+        </div>
+        <div style="flex:1; text-align:center; background:#fffbf0; border:1px solid #ffe180; border-radius:10px; padding:8px 4px;">
+          <ion-icon name="thermometer-outline" color="warning"></ion-icon>
+          <p style="margin:2px 0 0; font-size:1.4rem; font-weight:700; color:#d4a017;">{{ resultadoMedicao.temperatura }}</p>
+          <p style="margin:0; font-size:0.62rem; color:#999;">°C</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <ion-button expand="block" color="success" (click)="salvarMedicao()" style="flex:1;">
+          <ion-icon slot="start" name="checkmark-outline"></ion-icon> Salvar
+        </ion-button>
+        <ion-button expand="block" fill="outline" color="medium" (click)="descartar()" style="flex:1;">
+          <ion-icon slot="start" name="close-outline"></ion-icon> Descartar
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
 
   <!-- Grade de Sensores -->
   <ion-grid class="ion-no-padding">
     <ion-row>
       <ion-col size="6" *ngFor="let item of sensores">
-        <ion-card (click)="enviarComando(item.tipo)"
-          style="margin: 5px; text-align: center; background: #4285f4; color: white;">
+        <ion-card
+          (click)="enviarComando(item.tipo)"
+          [style.opacity]="(item.requerPaciente && !(pacienteAtivo$ | async)) || medicaoIniciada ? '0.4' : '1'"
+          style="margin:5px; text-align:center; background:#4285f4; color:white; cursor:pointer;">
           <ion-card-content>
-            <ion-icon [name]="item.icone" style="font-size: 2rem;"></ion-icon>
-            <p style="font-weight: bold; margin-top: 5px;">{{ item.nome }}</p>
+            <ion-icon [name]="item.icone" style="font-size:2rem;"></ion-icon>
+            <p style="font-weight:bold; margin-top:5px;">{{ item.nome }}</p>
           </ion-card-content>
         </ion-card>
       </ion-col>
