@@ -115,15 +115,15 @@
 
   <!-- Botão Deletar Conta -->
   <div class="delete-section">
-    <ion-button expand="block" color="danger" (click)="confirmarDeletarConta()">
+    <ion-button expand="block" color="danger" (click)="confirmarDeletarConta()" [disabled]="processandoLogout">
       <ion-icon name="trash-outline" slot="start"></ion-icon>
       Deletar Conta
     </ion-button>
   </div>
   <div class="delete-section">
-    <ion-button expand="block" color="tertiary" (click)="logout()">
-      <ion-icon name="trash-outline" slot="start"></ion-icon>
-      Sair
+    <ion-button expand="block" color="tertiary" (click)="logout()" [disabled]="processandoLogout">
+      <ion-icon name="log-out-outline" slot="start"></ion-icon>
+      {{ processandoLogout ? 'SAINDO...' : 'Sair' }}
     </ion-button>
   </div>
 

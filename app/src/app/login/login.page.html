@@ -23,18 +23,20 @@
             </div>
           </div>
 
-          <ion-button expand="block" fill="clear" size="small" (click)="irParaRecuperarSenha()">
+          <ion-button type="button" expand="block" fill="clear" size="small" (click)="irParaRecuperarSenha()">
             Esqueci minha senha
           </ion-button>
 
-          <ion-button expand="block" type="submit" class="btn-primary-blue" [disabled]="!email || !password">
-            ENTRAR
+          <ion-button expand="block" type="submit" class="btn-primary-blue" [disabled]="!email || !password || processandoLogin">
+            {{ processandoLogin ? 'ENTRANDO...' : 'ENTRAR' }}
           </ion-button>
         </form>
 
-        <div class="google-login-section" (click)="loginComGoogle()">
+        <div class="google-login-section"
+             [class.disabled]="processandoLogin"
+             (click)="!processandoLogin && loginComGoogle()">
           <ion-icon name="logo-google" class="google-icon"></ion-icon>
-          <ion-label>Entrar com o Google</ion-label>
+          <ion-label>{{ processandoLogin ? 'Aguarde...' : 'Entrar com o Google' }}</ion-label>
         </div>
 
         <div class="footer-links">

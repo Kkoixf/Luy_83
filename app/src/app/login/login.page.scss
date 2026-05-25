@@ -81,11 +81,23 @@
     cursor: pointer;
     font-size: 0.95rem;
     font-weight: 500;
+    padding: 10px;
+    border-radius: 12px;
+    transition: background 0.15s, opacity 0.15s;
+
+    &:active {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    &.disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
 
     .google-icon {
       font-size: 24px;
       margin-right: 10px;
-      color: #DB4437; 
+      color: #DB4437;
     }
   }
 

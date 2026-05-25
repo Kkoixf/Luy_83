@@ -80,15 +80,23 @@ export class CadastroPage implements OnInit {
   }
 
   ngOnInit() {
-    const currentUser = this.auth.currentUser;
-    if (currentUser) {
-      this.googleFlow = true;
-      this.dados.email = currentUser.email || '';
-      this.dados.nomeCompleto = currentUser.displayName || '';
-    }
+    // Aguarda o authState resolver (em APK o currentUser pode ainda ser null no init)
+    firstValueFrom(authState(this.auth).pipe(filter(u => u !== undefined)))
+      .then(user => {
+        this.ngZone.run(() => {
+          if (user) {
+            this.googleFlow = true;
+            this.dados.email = user.email || '';
+            this.dados.nomeCompleto = user.displayName || '';
+          }
+        });
+      })
+      .catch(() => { /* silencioso */ });
   }
 
   async register() {
+    if (this.isLoading) return;
+
     if (!this.dados.termsAccepted) {
       this.showToast('Você precisa aceitar os termos de uso.');
       return;
@@ -99,12 +107,53 @@ export class CadastroPage implements OnInit {
       return;
     }
 
-    if (!this.dados.email.trim()) {
+    const email = (this.dados.email || '').trim().toLowerCase();
+    if (!email) {
       this.showToast('Preencha o e-mail.');
       return;
     }
 
-    if (this.isLoading) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.showToast('E-mail inválido.');
+      return;
+    }
+
+    if (!this.dados.cpf || this.dados.cpf.replace(/\D/g, '').length !== 11) {
+      this.showToast('CPF inválido.');
+      return;
+    }
+
+    if (!this.dados.telefone || this.dados.telefone.replace(/\D/g, '').length < 10) {
+      this.showToast('Telefone inválido.');
+      return;
+    }
+
+    if (!this.dados.genero) {
+      this.showToast('Selecione o gênero.');
+      return;
+    }
+
+    if (!this.dados.tipoProfissional) {
+      this.showToast('Selecione o tipo de profissional.');
+      return;
+    }
+
+    if (this.dados.tipoProfissional === 'medico' && !this.dados.especialidade) {
+      this.showToast('Selecione a especialidade médica.');
+      return;
+    }
+
+    if (!this.dados.crm) {
+      const campo = this.dados.tipoProfissional === 'enfermeiro' ? 'COREN' : 'CRM';
+      this.showToast(`Informe o número do ${campo}.`);
+      return;
+    }
+
+    if (!this.dados.uf) {
+      this.showToast('Selecione a UF.');
+      return;
+    }
+
     this.isLoading = true;
 
     try {
@@ -112,27 +161,25 @@ export class CadastroPage implements OnInit {
 
       if (this.googleFlow) {
         if (!this.auth.currentUser) {
-          this.showToast('Erro: Sessão do Google não encontrada. Faça login novamente.');
-          this.isLoading = false;
+          this.showToast('Sessão do Google expirou. Faça login novamente.');
+          this.ngZone.run(() => this.router.navigate(['/login'], { replaceUrl: true }));
           return;
         }
         uid = this.auth.currentUser.uid;
       } else {
         if (!this.newPassword || this.newPassword !== this.confirmPassword) {
           this.showToast('As senhas não coincidem.');
-          this.isLoading = false;
           return;
         }
 
         if (!this.senhaForte(this.newPassword)) {
           this.showToast('Senha fraca. Use 8+ caracteres com maiúscula, minúscula, número e caractere especial.');
-          this.isLoading = false;
           return;
         }
 
         const userCredential = await createUserWithEmailAndPassword(
           this.auth,
-          this.dados.email.trim(),
+          email,
           this.newPassword
         );
         uid = userCredential.user.uid;
@@ -147,11 +194,11 @@ export class CadastroPage implements OnInit {
         uf: this.dados.uf,
         cpf: this.dados.cpf,
         especialidade: this.dados.especialidade,
-        email: this.dados.email.toLowerCase().trim(),
+        email,
         projeto: 'Luy-83',
         dataCriacao: new Date().toISOString(),
         provider: this.googleFlow ? 'google' : 'email',
-        uid: uid,
+        uid,
         firstLogin: true
       };
 
@@ -167,10 +214,13 @@ export class CadastroPage implements OnInit {
 
     } catch (error: any) {
       console.error('Erro no cadastro:', error);
+      const code = error?.code || '';
       let mensagem = 'Erro ao cadastrar. Tente novamente.';
-      if (error.code === 'auth/email-already-in-use') mensagem = 'Este e-mail já está em uso.';
-      if (error.code === 'auth/weak-password') mensagem = 'A senha é muito fraca. Use ao menos 6 caracteres.';
-      if (error.code === 'auth/invalid-email') mensagem = 'E-mail inválido.';
+      if (code === 'auth/email-already-in-use') mensagem = 'Este e-mail já está em uso.';
+      else if (code === 'auth/weak-password') mensagem = 'Senha muito fraca.';
+      else if (code === 'auth/invalid-email') mensagem = 'E-mail inválido.';
+      else if (code === 'auth/network-request-failed') mensagem = 'Sem conexão com a internet.';
+      else if (code === 'permission-denied') mensagem = 'Sem permissão para salvar. Tente novamente.';
       this.showToast(mensagem);
     } finally {
       this.isLoading = false;

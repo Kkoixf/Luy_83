@@ -15,7 +15,7 @@ import { addIcons } from 'ionicons';
 import {
   personCircle, mailOutline, callOutline, cardOutline, personOutline,
   informationCircleOutline, headsetOutline, trashOutline, chevronForwardOutline,
-  cameraOutline
+  cameraOutline, logOutOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -32,6 +32,8 @@ import {
 export class PerfilPage implements OnInit {
   user: any = null;
   fotoPerfil: string | null = null;
+  processandoFoto = false;
+  processandoLogout = false;
 
   private readonly MAX_FOTO_BYTES = 700_000;
 
@@ -48,7 +50,7 @@ export class PerfilPage implements OnInit {
     addIcons({
       personCircle, mailOutline, callOutline, cardOutline, personOutline,
       informationCircleOutline, headsetOutline, trashOutline, chevronForwardOutline,
-      cameraOutline
+      cameraOutline, logOutOutline
     });
   }
 
@@ -78,15 +80,28 @@ export class PerfilPage implements OnInit {
     const file = input.files?.[0];
     if (!file) return;
 
+    if (this.processandoFoto) { input.value = ''; return; }
+
     if (!file.type.startsWith('image/')) {
       this.showToast('Selecione um arquivo de imagem válido.');
       input.value = '';
       return;
     }
 
+    this.processandoFoto = true;
     try {
       const dataUrl = await this.lerComoDataUrl(file);
-      const otimizada = await this.redimensionarImagem(dataUrl, 400);
+
+      // Tenta reduzir progressivamente até caber no limite (APK pode mandar foto >5MB)
+      let otimizada = await this.redimensionarImagem(dataUrl, 400, 0.82);
+      let tamanho = 360;
+      let qualidade = 0.75;
+
+      while (otimizada.length > this.MAX_FOTO_BYTES && tamanho >= 200) {
+        otimizada = await this.redimensionarImagem(dataUrl, tamanho, qualidade);
+        tamanho -= 60;
+        qualidade = Math.max(0.4, qualidade - 0.1);
+      }
 
       if (otimizada.length > this.MAX_FOTO_BYTES) {
         this.showToast('Imagem muito grande. Tente uma menor.');
@@ -102,6 +117,7 @@ export class PerfilPage implements OnInit {
       this.showToast('Não foi possível salvar a foto.');
     } finally {
       input.value = '';
+      this.processandoFoto = false;
     }
   }
 
@@ -133,7 +149,7 @@ export class PerfilPage implements OnInit {
     });
   }
 
-  private redimensionarImagem(dataUrl: string, maxLado: number): Promise<string> {
+  private redimensionarImagem(dataUrl: string, maxLado: number, qualidade: number = 0.82): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -144,7 +160,7 @@ export class PerfilPage implements OnInit {
         const ctx = canvas.getContext('2d');
         if (!ctx) { reject(new Error('Canvas indisponível')); return; }
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
+        resolve(canvas.toDataURL('image/jpeg', qualidade));
       };
       img.onerror = () => reject(new Error('Falha ao carregar imagem'));
       img.src = dataUrl;
@@ -195,7 +211,9 @@ export class PerfilPage implements OnInit {
     await alert.present();
   }
 
-   async logout() {
+  async logout() {
+    if (this.processandoLogout) return;
+
     const alert = await this.alertController.create({
       header: 'Sair da conta',
       message: 'Tem certeza que deseja encerrar sua sessão?',
@@ -205,8 +223,18 @@ export class PerfilPage implements OnInit {
           text: 'Sair',
           role: 'destructive',
           handler: async () => {
-            await this.database.logout();
-            this.router.navigate(['/login'], { replaceUrl: true });
+            if (this.processandoLogout) return false;
+            this.processandoLogout = true;
+            try {
+              await this.database.logout();
+              await this.router.navigate(['/login'], { replaceUrl: true });
+            } catch (err) {
+              console.error('Erro ao sair:', err);
+              this.showToast('Erro ao encerrar sessão.');
+            } finally {
+              this.processandoLogout = false;
+            }
+            return true;
           }
         }
       ]
@@ -215,14 +243,20 @@ export class PerfilPage implements OnInit {
   }
 
   async confirmarDeletarConta() {
+    const user = this.auth.currentUser;
+    const isGoogle = !!user?.providerData.some(p => p.providerId === 'google.com');
+
     const alert = await this.alertController.create({
       header: 'Deletar Conta',
-      message: 'Tem certeza? Todos os seus dados e registros de pacientes serão apagados permanentemente.',
-      inputs: [
+      message: isGoogle
+        ? 'Tem certeza? Todos os seus dados e registros de pacientes serão apagados permanentemente. Será pedida a confirmação com sua conta Google.'
+        : 'Tem certeza? Todos os seus dados e registros de pacientes serão apagados permanentemente.',
+      inputs: isGoogle ? [] : [
         {
           name: 'senha',
           type: 'password',
-          placeholder: 'Digite sua senha para confirmar'
+          placeholder: 'Digite sua senha para confirmar',
+          attributes: { autocomplete: 'current-password' }
         }
       ],
       buttons: [
@@ -231,21 +265,35 @@ export class PerfilPage implements OnInit {
           text: 'Deletar',
           cssClass: 'alert-button-danger',
           handler: async (data) => {
+            const senha = data?.senha;
+
+            if (!isGoogle && !senha) {
+              const t = await this.toastController.create({
+                message: 'Digite sua senha para confirmar.',
+                duration: 2000,
+                color: 'warning'
+              });
+              await t.present();
+              return false;
+            }
+
             try {
-              await this.database.deleteAccount();
+              await this.database.deleteAccount(senha);
               const toast = await this.toastController.create({
                 message: 'Conta deletada com sucesso.',
                 duration: 2000
               });
               await toast.present();
               this.router.navigate(['/login'], { replaceUrl: true });
+              return true;
             } catch (error: any) {
               const toast = await this.toastController.create({
-                message: error.message || 'Erro ao deletar conta.',
-                duration: 2000,
+                message: error?.message || 'Erro ao deletar conta.',
+                duration: 2500,
                 color: 'danger'
               });
               await toast.present();
+              return false;
             }
           }
         }

@@ -35,8 +35,8 @@ import { Database } from '../services/database';
 export class LoginPage implements OnInit, OnDestroy {
   email: string = '';
   password: string = '';
-  private processandoLogin = false;
-  
+  processandoLogin = false;
+
   private authUnsubscribe: (() => void) | null = null;
 
   constructor(
@@ -85,8 +85,16 @@ export class LoginPage implements OnInit, OnDestroy {
   }
 
   async login() {
+    if (this.processandoLogin) return;
+
     if (!this.email || !this.password) {
       this.showToast('Preencha todos os campos.');
+      return;
+    }
+
+    const email = this.email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.showToast('E-mail inválido.');
       return;
     }
 
@@ -95,23 +103,28 @@ export class LoginPage implements OnInit, OnDestroy {
     try {
       const cred = await signInWithEmailAndPassword(
         this.auth,
-        this.email.trim(),
+        email,
         this.password
       );
       this.showToast('Bem-vindo ao sistema Luy-83!');
       await this.redirecionarPosLogin(cred.user.uid);
     } catch (error: any) {
       let mensagem = 'Erro ao entrar.';
+      const code = error?.code || '';
       if (
-        error?.code === 'auth/invalid-credential' ||
-        error?.code === 'auth/wrong-password' ||
-        error?.code === 'auth/user-not-found'
+        code === 'auth/invalid-credential' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/user-not-found'
       ) {
         mensagem = 'E-mail ou senha incorretos.';
-      } else if (error?.code === 'auth/too-many-requests') {
+      } else if (code === 'auth/too-many-requests') {
         mensagem = 'Muitas tentativas. Tente novamente em alguns minutos.';
-      } else if (error?.code === 'auth/invalid-email') {
+      } else if (code === 'auth/invalid-email') {
         mensagem = 'E-mail inválido.';
+      } else if (code === 'auth/network-request-failed') {
+        mensagem = 'Sem conexão com a internet.';
+      } else if (code === 'auth/user-disabled') {
+        mensagem = 'Esta conta foi desativada.';
       }
       this.showToast(mensagem);
     } finally {
@@ -120,6 +133,7 @@ export class LoginPage implements OnInit, OnDestroy {
   }
 
   async loginComGoogle() {
+    if (this.processandoLogin) return;
     this.processandoLogin = true;
 
     try {
@@ -136,9 +150,31 @@ export class LoginPage implements OnInit, OnDestroy {
       await this.redirecionarPosLogin(userCredential.user.uid);
 
     } catch (error: any) {
-      if (error.message !== 'cancel' && error.code !== 'ERR_CANCELED') {
-        console.error('Erro Google login:', error);
-        this.showToast('Erro ao autenticar com o Google.');
+      const code = error?.code || '';
+      const msg = (error?.message || '').toLowerCase();
+
+      // Usuário cancelou — silenciar (comum no Android quando fecha o sheet)
+      const cancelado =
+        msg.includes('cancel') ||
+        code === 'ERR_CANCELED' ||
+        code === '12501' ||
+        code === 'auth/popup-closed-by-user' ||
+        code === 'auth/cancelled-popup-request';
+
+      if (cancelado) {
+        return;
+      }
+
+      console.error('Erro Google login:', error);
+
+      if (code === 'auth/network-request-failed' || msg.includes('network')) {
+        this.showToast('Sem conexão com a internet.');
+      } else if (code === 'auth/account-exists-with-different-credential') {
+        this.showToast('Já existe uma conta com este e-mail. Entre com a senha.');
+      } else if (code === '10' || msg.includes('developer_error')) {
+        this.showToast('Configuração do Google inválida. Verifique o SHA-1 no Firebase.');
+      } else {
+        this.showToast('Erro ao autenticar com o Google. Tente novamente.');
       }
     } finally {
       this.processandoLogin = false;
