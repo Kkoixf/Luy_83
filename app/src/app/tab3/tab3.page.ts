@@ -13,7 +13,7 @@ import {
   personAddOutline, trash, eyeOutline, arrowBackOutline,
   trashOutline, waterOutline, heartOutline, thermometerOutline,
   chevronBackOutline, chevronForwardOutline, downloadOutline,
-  pulseOutline, medkitOutline
+  pulseOutline, medkitOutline, informationCircleOutline
 } from 'ionicons/icons';
 import { AlertController, ToastController } from '@ionic/angular';
 import { NavController } from '@ionic/angular/standalone';
@@ -62,13 +62,21 @@ export class Tab3Page {
       arrowBackOutline, trashOutline, personAddOutline, waterOutline,
       heartOutline, thermometerOutline, chevronBackOutline,
       chevronForwardOutline, downloadOutline, trash, eyeOutline,
-      pulseOutline, medkitOutline
+      pulseOutline, medkitOutline, informationCircleOutline
     });
   }
 
   async ionViewWillEnter() {
-    await this.databaseService.iniciarBanco();
+    try {
+      await this.databaseService.iniciarBanco();
+    } catch (e) {
+      console.error('Falha ao iniciar banco:', e);
+    }
     await this.carregarPacientes();
+  }
+
+  get usandoFallbackLocalStorage(): boolean {
+    return this.databaseService.isFallback();
   }
 
   async carregarPacientes() {
@@ -127,21 +135,67 @@ export class Tab3Page {
     }
   }
 
+  salvando = false;
+
   async salvarNovoPaciente() {
-    if (!this.novoPaciente.nome || !this.novoPaciente.cpf) return;
+    if (this.salvando) return;
+
+    const nome = (this.novoPaciente.nome || '').trim();
+    const cpfDigitos = (this.novoPaciente.cpf || '').replace(/\D/g, '');
+    const dataNasc = (this.novoPaciente.dataNasc || '').trim();
+
+    if (!nome) {
+      this.mostrarToast('Informe o nome do paciente.', 'warning');
+      return;
+    }
+    if (cpfDigitos.length !== 11) {
+      this.mostrarToast('CPF inválido. Use 11 dígitos.', 'warning');
+      return;
+    }
+    if (!this.dataValida(dataNasc)) {
+      this.mostrarToast('Data de nascimento inválida (DD/MM/AAAA).', 'warning');
+      return;
+    }
+
+    this.salvando = true;
     try {
       await this.databaseService.iniciarBanco();
-      await this.databaseService.addPaciente(
-        this.novoPaciente.nome,
-        this.novoPaciente.cpf,
-        this.novoPaciente.dataNasc
-      );
+      await this.databaseService.addPaciente(nome, this.novoPaciente.cpf, dataNasc);
       await this.carregarPacientes();
       this.novoPaciente = { nome: '', cpf: '', dataNasc: '' };
       this.viewMode = 'lista';
-    } catch (error) {
+      this.mostrarToast('Paciente cadastrado com sucesso!');
+    } catch (error: any) {
       console.error('Erro ao salvar paciente:', error);
+      const msg = (error?.message || '').toLowerCase();
+      if (msg.includes('unique') || msg.includes('constraint')) {
+        this.mostrarToast('Já existe um paciente com este CPF.', 'danger');
+      } else if (msg.includes('no such table') || msg.includes('database') || msg.includes('sqlite')) {
+        this.mostrarToast('Banco de dados indisponível. Reinicie o app.', 'danger');
+      } else {
+        this.mostrarToast('Erro ao salvar paciente. Tente novamente.', 'danger');
+      }
+    } finally {
+      this.salvando = false;
     }
+  }
+
+  private dataValida(data: string): boolean {
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return false;
+    const [d, m, y] = data.split('/').map(Number);
+    if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1900 || y > new Date().getFullYear()) return false;
+    const dt = new Date(y, m - 1, d);
+    return dt.getDate() === d && dt.getMonth() === m - 1 && dt.getFullYear() === y;
+  }
+
+  private async mostrarToast(message: string, color: string = 'success') {
+    const t = await this.toastController.create({
+      message,
+      duration: 2500,
+      position: 'bottom',
+      color
+    });
+    await t.present();
   }
 
   gerarGrafico() {
@@ -204,21 +258,26 @@ export class Tab3Page {
           text: 'Excluir',
           handler: async () => {
             try {
-   
-              if (medicao.id_banco && (this.databaseService as any).db) {
-                await (this.databaseService as any).db.run('DELETE FROM medicoes WHERE id = ?', [medicao.id_banco]);
+              if (medicao.id_banco) {
+                await this.databaseService.deletarMedicao(medicao.id_banco);
               }
-              
-             
+
               this.pacienteSelecionado.medicoes.splice(index, 1);
               this.indiceMedicao = Math.max(0, Math.min(this.indiceMedicao, this.pacienteSelecionado.medicoes.length - 1));
-              
+
               const t = await this.toastController.create({ message: 'Medição excluída.', duration: 2000, position: 'bottom' });
               await t.present();
-              
+
               this.gerarGrafico();
             } catch (err) {
-              console.error('Erro ao deletar medição do SQLite:', err);
+              console.error('Erro ao deletar medição:', err);
+              const t = await this.toastController.create({
+                message: 'Não foi possível excluir a medição.',
+                duration: 2000,
+                color: 'danger',
+                position: 'bottom'
+              });
+              await t.present();
             }
           }
         }
@@ -361,17 +420,35 @@ export class Tab3Page {
   }
 
   formatarCpf(event: any) {
-    let v = event.target.value.replace(/\D/g, '').slice(0, 11);
-    v = v.replace(/^(\d{3})(\d)/, '$1.$2');
-    v = v.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
-    v = v.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+    let v = (event.target.value || '').replace(/\D/g, '');
+    if (v.length > 11) v = v.substring(0, 11);
+    if (v.length > 9) {
+      v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    } else if (v.length > 6) {
+      v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    } else if (v.length > 3) {
+      v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    }
     this.novoPaciente.cpf = v;
+    if (event.target) event.target.value = v;
   }
 
   formatoData(event: any) {
-    let v = event.target.value.replace(/\D/g, '').slice(0, 8);
-    v = v.replace(/(\d{2})(\d)/, '$1/$2');
-    v = v.replace(/(\d{2})(\d)/, '$1/$2');
+    let v = (event.target.value || '').replace(/\D/g, '');
+    if (v.length > 8) v = v.substring(0, 8);
+    if (v.length > 4) {
+      v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3');
+    } else if (v.length > 2) {
+      v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2');
+    }
     this.novoPaciente.dataNasc = v;
+    if (event.target) event.target.value = v;
+  }
+
+  apenasNumerosPaciente(event: KeyboardEvent) {
+    const tecla = event.key;
+    if (tecla.length === 1 && !/^\d$/.test(tecla)) {
+      event.preventDefault();
+    }
   }
 }
