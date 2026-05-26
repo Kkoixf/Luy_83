@@ -35,3 +35,29 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+/**
+ * Notificações (toasts) do app — estilo padronizado e profissional.
+ * Aplicado via NotificationService (cssClass: 'app-toast').
+ */
+ion-toast.app-toast {
+  --border-radius: 12px;
+  --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  --button-color: currentColor;
+  font-weight: 500;
+  text-align: start;
+
+  // Afasta um pouco da status bar / notch no topo
+  &::part(container) {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  &::part(icon) {
+    font-size: 1.35rem;
+  }
+
+  &::part(message) {
+    line-height: 1.3;
+  }
+}

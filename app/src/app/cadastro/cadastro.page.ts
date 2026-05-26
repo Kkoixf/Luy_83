@@ -7,7 +7,8 @@ import {
   IonLabel, IonBackButton, IonButtons, IonSelect, IonSelectOption, IonCheckbox, IonNote
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
-import { ToastController, AlertController } from '@ionic/angular/standalone';
+import { AlertController } from '@ionic/angular/standalone';
+import { NotificationService } from '../services/notification.service';
 import { Auth, createUserWithEmailAndPassword, authState } from '@angular/fire/auth';
 import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { Database } from '../services/database';
@@ -69,7 +70,7 @@ export class CadastroPage implements OnInit {
 
   constructor(
     private router: Router,
-    private toastController: ToastController,
+    private notify: NotificationService,
     private alertController: AlertController,
     private auth: Auth,
     private firestore: Firestore,
@@ -98,59 +99,59 @@ export class CadastroPage implements OnInit {
     if (this.isLoading) return;
 
     if (!this.dados.termsAccepted) {
-      this.showToast('Você precisa aceitar os termos de uso.');
+      this.notify.warning('Você precisa aceitar os termos de uso.');
       return;
     }
 
     if (!this.dados.nomeCompleto.trim()) {
-      this.showToast('Preencha o nome completo.');
+      this.notify.warning('Preencha o nome completo.');
       return;
     }
 
     const email = (this.dados.email || '').trim().toLowerCase();
     if (!email) {
-      this.showToast('Preencha o e-mail.');
+      this.notify.warning('Preencha o e-mail.');
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.showToast('E-mail inválido.');
+      this.notify.warning('E-mail inválido.');
       return;
     }
 
     if (!this.dados.cpf || this.dados.cpf.replace(/\D/g, '').length !== 11) {
-      this.showToast('CPF inválido.');
+      this.notify.warning('CPF inválido.');
       return;
     }
 
     if (!this.dados.telefone || this.dados.telefone.replace(/\D/g, '').length < 10) {
-      this.showToast('Telefone inválido.');
+      this.notify.warning('Telefone inválido.');
       return;
     }
 
     if (!this.dados.genero) {
-      this.showToast('Selecione o gênero.');
+      this.notify.warning('Selecione o gênero.');
       return;
     }
 
     if (!this.dados.tipoProfissional) {
-      this.showToast('Selecione o tipo de profissional.');
+      this.notify.warning('Selecione o tipo de profissional.');
       return;
     }
 
     if (this.dados.tipoProfissional === 'medico' && !this.dados.especialidade) {
-      this.showToast('Selecione a especialidade médica.');
+      this.notify.warning('Selecione a especialidade médica.');
       return;
     }
 
     if (!this.dados.crm) {
       const campo = this.dados.tipoProfissional === 'enfermeiro' ? 'COREN' : 'CRM';
-      this.showToast(`Informe o número do ${campo}.`);
+      this.notify.warning(`Informe o número do ${campo}.`);
       return;
     }
 
     if (!this.dados.uf) {
-      this.showToast('Selecione a UF.');
+      this.notify.warning('Selecione a UF.');
       return;
     }
 
@@ -161,19 +162,19 @@ export class CadastroPage implements OnInit {
 
       if (this.googleFlow) {
         if (!this.auth.currentUser) {
-          this.showToast('Sessão do Google expirou. Faça login novamente.');
+          this.notify.error('Sessão do Google expirou. Faça login novamente.');
           this.ngZone.run(() => this.router.navigate(['/login'], { replaceUrl: true }));
           return;
         }
         uid = this.auth.currentUser.uid;
       } else {
         if (!this.newPassword || this.newPassword !== this.confirmPassword) {
-          this.showToast('As senhas não coincidem.');
+          this.notify.warning('As senhas não coincidem.');
           return;
         }
 
         if (!this.senhaForte(this.newPassword)) {
-          this.showToast('Senha fraca. Use 8+ caracteres com maiúscula, minúscula, número e caractere especial.');
+          this.notify.warning('Senha fraca. Use 8+ caracteres com maiúscula, minúscula, número e caractere especial.');
           return;
         }
 
@@ -206,7 +207,7 @@ export class CadastroPage implements OnInit {
 
       this.database.setUser(dadosParaSalvar);
 
-      await this.showToast('Cadastro realizado com sucesso!');
+      await this.notify.success('Cadastro realizado com sucesso!');
 
       this.ngZone.run(() => {
         this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
@@ -221,7 +222,7 @@ export class CadastroPage implements OnInit {
       else if (code === 'auth/invalid-email') mensagem = 'E-mail inválido.';
       else if (code === 'auth/network-request-failed') mensagem = 'Sem conexão com a internet.';
       else if (code === 'permission-denied') mensagem = 'Sem permissão para salvar. Tente novamente.';
-      this.showToast(mensagem);
+      this.notify.error(mensagem);
     } finally {
       this.isLoading = false;
     }
@@ -242,7 +243,7 @@ export class CadastroPage implements OnInit {
     this.googleFlow = false;
     this.dados.email = '';
     this.dados.nomeCompleto = '';
-    this.showToast('Sessão encerrada.');
+    this.notify.info('Sessão encerrada.');
     this.router.navigate(['/login'], { replaceUrl: true });
   }
 
@@ -298,12 +299,4 @@ export class CadastroPage implements OnInit {
     };
   }
 
-  async showToast(message: string) {
-    const toast = await this.toastController.create({
-      message,
-      duration: 3000,
-      position: 'bottom'
-    });
-    await toast.present();
-  }
 }

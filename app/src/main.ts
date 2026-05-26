@@ -28,24 +28,29 @@ const firebaseConfig = {
 
 jeepSqlite(window);
 
+async function inicializarSqliteWeb(): Promise<void> {
+  if (Capacitor.getPlatform() !== 'web') return;
+  try {
+    const sqlite = new SQLiteConnection(CapacitorSQLite);
+    const jeepEl = document.createElement('jeep-sqlite');
+    document.body.appendChild(jeepEl);
+    await customElements.whenDefined('jeep-sqlite');
+    await sqlite.initWebStore();
+    console.log('SQLite web inicializado.');
+  } catch (err) {
+    // No browser, jeep-sqlite usa sql.js WASM e pode falhar com
+    // LinkError dependendo da versão do navegador. No APK Android
+    // usa SQLite nativo do Capacitor — esse caminho nem executa.
+    // Não bloqueia o bootstrap do app.
+    console.warn('SQLite web indisponível (somente browser):', err);
+  }
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
-  const platform = Capacitor.getPlatform();
-  const sqlite = new SQLiteConnection(CapacitorSQLite);
+  await inicializarSqliteWeb();
 
   try {
-    if (platform === 'web') {
-   
-      const jeepEl = document.createElement('jeep-sqlite');
-      document.body.appendChild(jeepEl);
-      
-      // Aguarda o elemento ser definido e inicializa o armazenamento web
-      await customElements.whenDefined('jeep-sqlite');
-      await sqlite.initWebStore();
-    }
-
-    
-    bootstrapApplication(AppComponent, {
+    await bootstrapApplication(AppComponent, {
       providers: [
         { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
         provideIonicAngular(),
@@ -54,11 +59,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         provideFirebaseApp(() => initializeApp(firebaseConfig)),
         provideAuth(() => getAuth()),
         provideFirestore(() => getFirestore()),
-        AndroidPermissions, 
+        AndroidPermissions,
       ],
     });
-
   } catch (err) {
-    console.error('Erro na inicialização do App/SQLite:', err);
+    console.error('Erro ao inicializar o aplicativo:', err);
   }
 });

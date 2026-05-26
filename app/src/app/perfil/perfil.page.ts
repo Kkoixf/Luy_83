@@ -7,7 +7,8 @@ import {
   IonList, IonButtons, IonBackButton, IonInput
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
+import { NotificationService } from '../services/notification.service';
 import { Auth } from '@angular/fire/auth';
 import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
 import { Database } from '../services/database';
@@ -43,7 +44,7 @@ export class PerfilPage implements OnInit {
     private router: Router,
     private database: Database,
     private alertController: AlertController,
-    private toastController: ToastController,
+    private notify: NotificationService,
     private auth: Auth,
     private firestore: Firestore
   ) {
@@ -83,7 +84,7 @@ export class PerfilPage implements OnInit {
     if (this.processandoFoto) { input.value = ''; return; }
 
     if (!file.type.startsWith('image/')) {
-      this.showToast('Selecione um arquivo de imagem válido.');
+      this.notify.warning('Selecione um arquivo de imagem válido.');
       input.value = '';
       return;
     }
@@ -104,17 +105,17 @@ export class PerfilPage implements OnInit {
       }
 
       if (otimizada.length > this.MAX_FOTO_BYTES) {
-        this.showToast('Imagem muito grande. Tente uma menor.');
+        this.notify.warning('Imagem muito grande. Tente uma menor.');
         input.value = '';
         return;
       }
 
       this.fotoPerfil = otimizada;
       await this.salvarFoto(otimizada);
-      this.showToast('Foto de perfil atualizada!');
+      this.notify.success('Foto de perfil atualizada!');
     } catch (err) {
       console.error('Erro ao processar foto:', err);
-      this.showToast('Não foi possível salvar a foto.');
+      this.notify.error('Não foi possível salvar a foto.');
     } finally {
       input.value = '';
       this.processandoFoto = false;
@@ -132,7 +133,7 @@ export class PerfilPage implements OnInit {
           handler: async () => {
             this.fotoPerfil = null;
             await this.salvarFoto(null);
-            this.showToast('Foto removida.');
+            this.notify.info('Foto removida.');
           }
         }
       ]
@@ -183,15 +184,6 @@ export class PerfilPage implements OnInit {
     this.user = atualizado;
   }
 
-  async showToast(message: string) {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      position: 'bottom'
-    });
-    await toast.present();
-  }
-
   formatarGenero(genero: string): string {
     const map: any = {
       'masculino': 'Masculino',
@@ -230,7 +222,7 @@ export class PerfilPage implements OnInit {
               await this.router.navigate(['/login'], { replaceUrl: true });
             } catch (err) {
               console.error('Erro ao sair:', err);
-              this.showToast('Erro ao encerrar sessão.');
+              this.notify.error('Erro ao encerrar sessão.');
             } finally {
               this.processandoLogout = false;
             }
@@ -268,31 +260,17 @@ export class PerfilPage implements OnInit {
             const senha = data?.senha;
 
             if (!isGoogle && !senha) {
-              const t = await this.toastController.create({
-                message: 'Digite sua senha para confirmar.',
-                duration: 2000,
-                color: 'warning'
-              });
-              await t.present();
+              await this.notify.warning('Digite sua senha para confirmar.');
               return false;
             }
 
             try {
               await this.database.deleteAccount(senha);
-              const toast = await this.toastController.create({
-                message: 'Conta deletada com sucesso.',
-                duration: 2000
-              });
-              await toast.present();
+              await this.notify.success('Conta deletada com sucesso.');
               this.router.navigate(['/login'], { replaceUrl: true });
               return true;
             } catch (error: any) {
-              const toast = await this.toastController.create({
-                message: error?.message || 'Erro ao deletar conta.',
-                duration: 2500,
-                color: 'danger'
-              });
-              await toast.present();
+              await this.notify.error(error?.message || 'Erro ao deletar conta.');
               return false;
             }
           }

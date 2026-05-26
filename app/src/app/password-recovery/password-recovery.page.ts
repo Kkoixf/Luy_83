@@ -7,7 +7,7 @@ import {
   IonButtons, IonSpinner, IonIcon
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+import { NotificationService } from '../services/notification.service';
 import { Auth, sendPasswordResetEmail } from '@angular/fire/auth';
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, mailOutline, checkmarkCircleOutline } from 'ionicons/icons';
@@ -32,7 +32,7 @@ export class PasswordRecoveryPage {
 
   constructor(
     private router: Router,
-    private toastController: ToastController,
+    private notify: NotificationService,
     private auth: Auth
   ) {
     addIcons({ arrowBackOutline, mailOutline, checkmarkCircleOutline });
@@ -48,12 +48,12 @@ export class PasswordRecoveryPage {
     const email = (this.email || '').trim().toLowerCase();
 
     if (!email) {
-      this.showToast('Por favor, informe seu e-mail.');
+      this.notify.warning('Por favor, informe seu e-mail.');
       return;
     }
 
     if (!this.emailValido(email)) {
-      this.showToast('Formato de e-mail inválido.');
+      this.notify.warning('Formato de e-mail inválido.');
       return;
     }
 
@@ -63,7 +63,7 @@ export class PasswordRecoveryPage {
       this.email = email;
       this.emailSent = true;
       this.iniciarCooldown(45);
-      this.showToast('E-mail de recuperação enviado!');
+      this.notify.success('E-mail enviado! Verifique também a caixa de spam.');
     } catch (error: any) {
       const code = error?.code || '';
       let message = 'Erro ao processar sua solicitação. Tente novamente.';
@@ -72,7 +72,7 @@ export class PasswordRecoveryPage {
         // Por segurança, não revelar se o e-mail existe ou não.
         this.emailSent = true;
         this.iniciarCooldown(45);
-        this.showToast('Se o e-mail estiver cadastrado, você receberá o link em instantes.');
+        this.notify.info('Se o e-mail estiver cadastrado, você receberá o link em instantes. Verifique também o spam.');
         return;
       } else if (code === 'auth/invalid-email') {
         message = 'Formato de e-mail inválido.';
@@ -83,7 +83,7 @@ export class PasswordRecoveryPage {
       } else if (code === 'auth/network-request-failed') {
         message = 'Sem conexão com a internet. Verifique sua rede.';
       }
-      this.showToast(message);
+      this.notify.error(message);
     } finally {
       this.isLoading = false;
     }
@@ -116,16 +116,6 @@ export class PasswordRecoveryPage {
       this.cooldownTimer = null;
     }
     this.cooldownSegundos = 0;
-  }
-
-  async showToast(message: string) {
-    const toast = await this.toastController.create({
-      message,
-      duration: 3000,
-      position: 'bottom',
-      cssClass: 'safe-toast'
-    });
-    await toast.present();
   }
 
   voltar() {

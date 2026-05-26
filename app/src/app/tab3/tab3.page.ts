@@ -15,8 +15,9 @@ import {
   chevronBackOutline, chevronForwardOutline, downloadOutline,
   pulseOutline, medkitOutline, informationCircleOutline
 } from 'ionicons/icons';
-import { AlertController, ToastController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
 import { NavController } from '@ionic/angular/standalone';
+import { NotificationService } from '../services/notification.service';
 import { Chart, registerables } from 'chart.js';
 import { DatabaseService } from '../services/sqlite';
 import { Database } from '../services/database';
@@ -52,7 +53,7 @@ export class Tab3Page {
 
   constructor(
     private alertController: AlertController,
-    private toastController: ToastController,
+    private notify: NotificationService,
     private databaseService: DatabaseService,
     private database: Database,
     private navController: NavController,
@@ -188,14 +189,11 @@ export class Tab3Page {
     return dt.getDate() === d && dt.getMonth() === m - 1 && dt.getFullYear() === y;
   }
 
-  private async mostrarToast(message: string, color: string = 'success') {
-    const t = await this.toastController.create({
-      message,
-      duration: 2500,
-      position: 'bottom',
-      color
-    });
-    await t.present();
+  private mostrarToast(message: string, color: string = 'success') {
+    if (color === 'danger') return this.notify.error(message);
+    if (color === 'warning') return this.notify.warning(message);
+    if (color === 'primary' || color === 'info') return this.notify.info(message);
+    return this.notify.success(message);
   }
 
   gerarGrafico() {
@@ -240,7 +238,20 @@ export class Tab3Page {
           y: { beginAtZero: false, min: 40, max: 180,
                title: { display: true, text: 'BPM', font: { size: 10 } } }
         }
-      }
+      },
+      plugins: [{
+        // Pinta o fundo de branco. Sem isso o canvas é transparente e o
+        // gráfico sai como um retângulo preto no PDF (PNG sem fundo).
+        id: 'whiteBackground',
+        beforeDraw: (chart: any) => {
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-over';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, chart.width, chart.height);
+          ctx.restore();
+        }
+      }]
     });
   }
 
@@ -265,19 +276,12 @@ export class Tab3Page {
               this.pacienteSelecionado.medicoes.splice(index, 1);
               this.indiceMedicao = Math.max(0, Math.min(this.indiceMedicao, this.pacienteSelecionado.medicoes.length - 1));
 
-              const t = await this.toastController.create({ message: 'Medição excluída.', duration: 2000, position: 'bottom' });
-              await t.present();
+              await this.notify.success('Medição excluída.');
 
               this.gerarGrafico();
             } catch (err) {
               console.error('Erro ao deletar medição:', err);
-              const t = await this.toastController.create({
-                message: 'Não foi possível excluir a medição.',
-                duration: 2000,
-                color: 'danger',
-                position: 'bottom'
-              });
-              await t.present();
+              await this.notify.error('Não foi possível excluir a medição.');
             }
           }
         }
@@ -340,11 +344,18 @@ export class Tab3Page {
 
       if (this.chart) {
         try {
-          const img = this.chart.toBase64Image();
-          pdf.setFont('helvetica', 'bold');
-          pdf.text('Histórico de Batimentos', m, y); y += 4;
-          pdf.addImage(img, 'PNG', m, y, lp - m * 2, 70); y += 76;
-        } catch (_) {}
+          const canvas: HTMLCanvasElement = this.chart.canvas;
+          const img = this.chart.toBase64Image('image/png', 1.0);
+          const imgW = lp - m * 2;
+          const ratio = (canvas?.height && canvas?.width) ? canvas.height / canvas.width : 0.45;
+          const imgH = Math.min(90, imgW * ratio);
+          pdf.setTextColor(33, 33, 33);
+          pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12);
+          pdf.text('Histórico de Batimentos', m, y); y += 5;
+          pdf.addImage(img, 'PNG', m, y, imgW, imgH); y += imgH + 6;
+        } catch (err) {
+          console.error('Erro ao adicionar gráfico ao PDF:', err);
+        }
       }
 
       pdf.setFontSize(8); pdf.setTextColor(120, 120, 120);
@@ -352,12 +363,10 @@ export class Tab3Page {
         m, 285, { maxWidth: lp - m * 2 });
 
       pdf.save(`medicao-${(paciente.nome || 'paciente').replace(/\s+/g, '_')}-${(medicao.data || '').replace(/\//g, '-')}.pdf`);
-      const t = await this.toastController.create({ message: 'PDF gerado.', duration: 2000, position: 'bottom' });
-      await t.present();
+      await this.notify.success('PDF gerado.');
     } catch (err) {
       console.error('Erro PDF:', err);
-      const t = await this.toastController.create({ message: 'Erro ao gerar PDF.', duration: 2500, color: 'danger', position: 'bottom' });
-      await t.present();
+      await this.notify.error('Erro ao gerar PDF.');
     }
   }
 

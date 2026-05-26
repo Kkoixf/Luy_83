@@ -7,7 +7,7 @@ import {
   IonLabel, IonInput, IonButton, IonIcon
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular/standalone';
+import { NotificationService } from '../services/notification.service';
 import {
   Auth,
   signInWithEmailAndPassword,
@@ -41,7 +41,7 @@ export class LoginPage implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private toastController: ToastController,
+    private notify: NotificationService,
     private auth: Auth,
     private firestore: Firestore,
     private database: Database
@@ -80,7 +80,7 @@ export class LoginPage implements OnInit, OnDestroy {
       }
     } catch (error) {
       console.error('Erro ao verificar cadastro:', error);
-      this.showToast('Erro ao verificar dados. Tente novamente.');
+      this.notify.error('Erro ao verificar dados. Tente novamente.');
     }
   }
 
@@ -88,13 +88,13 @@ export class LoginPage implements OnInit, OnDestroy {
     if (this.processandoLogin) return;
 
     if (!this.email || !this.password) {
-      this.showToast('Preencha todos os campos.');
+      this.notify.warning('Preencha todos os campos.');
       return;
     }
 
     const email = this.email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.showToast('E-mail inválido.');
+      this.notify.warning('E-mail inválido.');
       return;
     }
 
@@ -106,7 +106,7 @@ export class LoginPage implements OnInit, OnDestroy {
         email,
         this.password
       );
-      this.showToast('Bem-vindo ao sistema Luy-83!');
+      this.notify.success('Bem-vindo ao sistema Luy-83!');
       await this.redirecionarPosLogin(cred.user.uid);
     } catch (error: any) {
       let mensagem = 'Erro ao entrar.';
@@ -126,7 +126,7 @@ export class LoginPage implements OnInit, OnDestroy {
       } else if (code === 'auth/user-disabled') {
         mensagem = 'Esta conta foi desativada.';
       }
-      this.showToast(mensagem);
+      this.notify.error(mensagem);
     } finally {
       this.processandoLogin = false;
     }
@@ -140,7 +140,7 @@ export class LoginPage implements OnInit, OnDestroy {
       const result = await FirebaseAuthentication.signInWithGoogle();
 
       if (!result.credential?.idToken) {
-        this.showToast('Não foi possível obter credencial do Google.');
+        this.notify.error('Não foi possível obter credencial do Google.');
         return;
       }
 
@@ -150,14 +150,16 @@ export class LoginPage implements OnInit, OnDestroy {
       await this.redirecionarPosLogin(userCredential.user.uid);
 
     } catch (error: any) {
-      const code = error?.code || '';
-      const msg = (error?.message || '').toLowerCase();
+      const code = String(error?.code ?? '');
+      const rawMsg = String(error?.message ?? '');
+      const msg = rawMsg.toLowerCase();
 
       // Usuário cancelou — silenciar (comum no Android quando fecha o sheet)
       const cancelado =
         msg.includes('cancel') ||
         code === 'ERR_CANCELED' ||
         code === '12501' ||
+        msg.includes('12501') ||
         code === 'auth/popup-closed-by-user' ||
         code === 'auth/cancelled-popup-request';
 
@@ -165,16 +167,28 @@ export class LoginPage implements OnInit, OnDestroy {
         return;
       }
 
-      console.error('Erro Google login:', error);
+      // Log completo para depuração (visível no Logcat do Android / DevTools)
+      console.error('Erro Google login | code:', code, '| message:', rawMsg, '| objeto:', error);
+
+      // SHA-1 não registrado no Firebase / config OAuth inválida (DEVELOPER_ERROR).
+      // O plugin nativo costuma repassar o código 10 dentro da mensagem (ex.: "10:" ou
+      // "ApiException: 10"), por isso checamos tanto o code quanto o texto.
+      const developerError =
+        code === '10' ||
+        msg.includes('developer_error') ||
+        msg.includes('apiexception: 10') ||
+        /(^|[^0-9])10:/.test(msg);
 
       if (code === 'auth/network-request-failed' || msg.includes('network')) {
-        this.showToast('Sem conexão com a internet.');
+        this.notify.error('Sem conexão com a internet.');
       } else if (code === 'auth/account-exists-with-different-credential') {
-        this.showToast('Já existe uma conta com este e-mail. Entre com a senha.');
-      } else if (code === '10' || msg.includes('developer_error')) {
-        this.showToast('Configuração do Google inválida. Verifique o SHA-1 no Firebase.');
+        this.notify.warning('Já existe uma conta com este e-mail. Entre com a senha.');
+      } else if (developerError) {
+        this.notify.error('Configuração do Google inválida (SHA-1 não registrado no Firebase).');
       } else {
-        this.showToast('Erro ao autenticar com o Google. Tente novamente.');
+        // Mostra o código/mensagem real para facilitar o diagnóstico de falhas futuras.
+        const detalhe = code || rawMsg || 'desconhecido';
+        this.notify.error(`Erro ao autenticar com o Google (${detalhe}). Tente novamente.`);
       }
     } finally {
       this.processandoLogin = false;
@@ -187,14 +201,5 @@ export class LoginPage implements OnInit, OnDestroy {
 
   irParaRecuperarSenha() {
     this.router.navigate(['/password-recovery']);
-  }
-
-  async showToast(message: string) {
-    const toast = await this.toastController.create({
-      message,
-      duration: 3000,
-      position: 'bottom'
-    });
-    await toast.present();
   }
 }
