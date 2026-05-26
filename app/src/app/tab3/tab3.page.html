@@ -19,6 +19,11 @@
 
 <ion-content [fullscreen]="true">
 
+  <div *ngIf="usandoFallbackLocalStorage" class="aviso-fallback">
+    <ion-icon name="information-circle-outline"></ion-icon>
+    Modo navegador: dados ficam salvos só nesse browser. Use o APK para SQLite persistente.
+  </div>
+
   <div *ngIf="viewMode === 'lista'">
     <ion-list lines="none" class="ion-padding-bottom" style="background: transparent;">
       <ion-item *ngFor="let p of pacientesFiltrados" class="paciente-card" button (click)="verDetalhes(p)">
@@ -47,18 +52,41 @@
       <ion-card-content>
         <ion-item fill="outline" mode="md" class="ion-margin-bottom">
           <ion-label position="stacked">Nome Completo</ion-label>
-          <ion-input type="text" placeholder="Nome do paciente" [(ngModel)]="novoPaciente.nome"></ion-input>
+          <ion-input
+            type="text"
+            placeholder="Nome do paciente"
+            [(ngModel)]="novoPaciente.nome"
+            maxlength="120"
+            autocapitalize="words"></ion-input>
         </ion-item>
         <ion-item fill="outline" mode="md" class="ion-margin-bottom">
           <ion-label position="stacked">CPF</ion-label>
-          <ion-input type="text" placeholder="000.000.000-00" [(ngModel)]="novoPaciente.cpf" (ionInput)="formatarCpf($event)"></ion-input>
+          <ion-input
+            type="tel"
+            inputmode="numeric"
+            placeholder="000.000.000-00"
+            [(ngModel)]="novoPaciente.cpf"
+            (ionInput)="formatarCpf($event)"
+            (keypress)="apenasNumerosPaciente($event)"
+            maxlength="14"></ion-input>
         </ion-item>
         <ion-item fill="outline" mode="md" class="ion-margin-bottom">
           <ion-label position="stacked">Data de Nascimento</ion-label>
-          <ion-input type="text" placeholder="00/00/0000" [(ngModel)]="novoPaciente.dataNasc" (ionInput)="formatoData($event)"></ion-input>
+          <ion-input
+            type="tel"
+            inputmode="numeric"
+            placeholder="DD/MM/AAAA"
+            [(ngModel)]="novoPaciente.dataNasc"
+            (ionInput)="formatoData($event)"
+            (keypress)="apenasNumerosPaciente($event)"
+            maxlength="10"></ion-input>
         </ion-item>
-        <ion-button expand="block" (click)="salvarNovoPaciente()" class="ion-margin-top">
-          Cadastrar Paciente
+        <ion-button
+          expand="block"
+          (click)="salvarNovoPaciente()"
+          class="ion-margin-top"
+          [disabled]="salvando">
+          {{ salvando ? 'CADASTRANDO...' : 'Cadastrar Paciente' }}
         </ion-button>
       </ion-card-content>
     </ion-card>
