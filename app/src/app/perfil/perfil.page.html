@@ -9,7 +9,6 @@
 
 <ion-content [fullscreen]="true" class="perfil-content">
 
-  <!-- Dados do Profissional -->
   <ion-card class="perfil-card">
     <ion-card-header>
       <div class="perfil-avatar">
@@ -47,7 +46,6 @@
     </ion-card-header>
   </ion-card>
 
-  <!-- Info do Profissional -->
   <ion-card class="info-card">
     <ion-card-header>
       <ion-card-title>Informações</ion-card-title>
@@ -86,7 +84,6 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Sobre o Luy -->
   <ion-card class="info-card" (click)="mostrarSobreLuy()">
     <ion-card-content>
       <ion-item lines="none" detail="true">
@@ -99,7 +96,6 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Suporte -->
   <ion-card class="info-card">
     <ion-card-content>
       <ion-item lines="none">
@@ -113,7 +109,6 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Botão Deletar Conta -->
   <div class="delete-section">
     <ion-button expand="block" color="danger" (click)="confirmarDeletarConta()" [disabled]="processandoLogout">
       <ion-icon name="trash-outline" slot="start"></ion-icon>
@@ -121,13 +116,12 @@
     </ion-button>
   </div>
   <div class="delete-section">
-    <ion-button expand="block" color="tertiary" (click)="logout()" [disabled]="processandoLogout">
+    <ion-button expand="block" color="primary" (click)="logout()" [disabled]="processandoLogout">
       <ion-icon name="log-out-outline" slot="start"></ion-icon>
       {{ processandoLogout ? 'SAINDO...' : 'Sair' }}
     </ion-button>
   </div>
 
-  <!-- Footer com versão -->
   <div class="version-footer">
     <p>Luy-83 App - Versão 1.0.0</p>
   </div>
