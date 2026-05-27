@@ -238,23 +238,9 @@ export class Tab3Page {
           y: { beginAtZero: false, min: 40, max: 180,
                title: { display: true, text: 'BPM', font: { size: 10 } } }
         }
-      },
-      plugins: [{
-        // Pinta o fundo de branco. Sem isso o canvas é transparente e o
-        // gráfico sai como um retângulo preto no PDF (PNG sem fundo).
-        id: 'whiteBackground',
-        beforeDraw: (chart: any) => {
-          const ctx = chart.ctx;
-          ctx.save();
-          ctx.globalCompositeOperation = 'destination-over';
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, chart.width, chart.height);
-          ctx.restore();
-        }
-      }]
+      }
     });
   }
-
  
   async deletarMedicao(index: number) {
     const medicao = this.pacienteSelecionado.medicoes[index];
