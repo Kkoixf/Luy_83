@@ -20,7 +20,7 @@
     .logo-pill {
       width: 50px;
       height: 50px;
-      background-color: #0055FF;
+      background-color: #4285f4;
       border-radius: 12px;
       margin-bottom: 25px;
       margin-left: auto;
@@ -128,13 +128,13 @@
   }
 
   .google-info {
-    background: rgba(0, 85, 255, 0.08);
-    color: #0055FF;
+    background: rgba(66, 133, 244, 0.08);
+    color: #4285f4;
     padding: 12px 14px;
     border-radius: 12px;
     font-size: 0.85rem;
     margin: 0 0 18px;
-    border-left: 3px solid #0055FF;
+    border-left: 3px solid #4285f4;
 
     p {
       margin: 0 0 6px;
@@ -145,7 +145,7 @@
       margin: 0;
       --padding-start: 0;
       --padding-end: 0;
-      --color: #0055FF;
+      --color: #4285f4;
       height: auto;
       text-transform: none;
       font-size: 0.82rem;
@@ -159,7 +159,7 @@
     ion-checkbox {
       --checkbox-background: #ffffff;
       --size: 20px;
-      --checkbox-background-checked: #0055FF;
+      --checkbox-background-checked: #4285f4;
       --border-color: #000000;
       font-size: 0.85rem;
     }
@@ -169,14 +169,14 @@
       color: #666;
 
       .link {
-        color: #0055FF;
+        color: #4285f4;
         font-weight: 600;
       }
     }
   }
 
   .btn-finish {
-    --background: #0055FF;
+    --background: #4285f4;
     --border-radius: 15px;
     height: 50px;
     font-weight: 600;

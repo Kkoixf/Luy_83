@@ -1,19 +1,6 @@
-// .barras{
-//   background-color: aliceblue;
-// }
-// ion-content{
-//   --background: aliceblue;
-// }
-
-ion-tabs{
-  --background: white;
-}
-
-.barras{
-  background-color: white;
-  border-color: white;
-}
-
-ion-tab-button{
-  --background:#d9e1f2;
+ion-tab-bar.barras {
+  --background: #ffffff;
+  --border: 1px solid #e0e0e0;
+  --color: #8a8a8a;
+  --color-selected: var(--ion-color-primary);
 }

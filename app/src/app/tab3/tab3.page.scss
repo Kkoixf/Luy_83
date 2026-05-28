@@ -64,7 +64,7 @@ ion-list {
 }
 
 ion-content {
-  --background: #111112;
+  --background: #E8EDF8;
 }
 
 .paciente-card {
@@ -111,7 +111,8 @@ ion-content {
 }
 
 ion-searchbar {
-  --background: #000000;
+  --background: #ffffff;
+  --color: #333333;
   --border-radius: 12px;
   --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding-left: 16px;
@@ -120,8 +121,8 @@ ion-searchbar {
 }
 
 ion-toolbar {
-  --background: #3880ff;
-  --color: #000000;
+  --background: #4285f4;
+  --color: #ffffff;
   --border-style: none;
   padding-bottom: 8px;
 }

@@ -34,7 +34,8 @@
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+/* App é tema claro: não seguir o modo escuro do sistema (mantém o visual consistente). */
+/* @import '@ionic/angular/css/palettes/dark.system.css'; */
 
 /**
  * Notificações (toasts) do app — estilo padronizado e profissional.

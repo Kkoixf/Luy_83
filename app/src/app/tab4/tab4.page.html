@@ -10,10 +10,10 @@
        SEÇÃO 1 — CONEXÃO VIA BLUETOOTH DIRETO
      
   ═══════════════════════════════════════════════════════════════════════ -->
-  <ion-card color="primary">
+  <ion-card>
     <ion-card-header>
       <ion-card-title>
-        <ion-icon name="bluetooth-outline" style="vertical-align: middle; margin-right: 6px;"></ion-icon>
+        <ion-icon name="bluetooth-outline" style="vertical-align: middle; margin-right: 6px; color: var(--ion-color-primary);"></ion-icon>
         Conexão Bluetooth
       </ion-card-title>
       <ion-card-subtitle>Controle direto sem Wi-Fi</ion-card-subtitle>
@@ -38,7 +38,7 @@
       <ion-button
         *ngIf="!(bleConectado$ | async)"
         expand="block"
-        color="light"
+        color="primary"
         class="ion-margin-top"
         (click)="conectarBLE()"
         [disabled]="(bleConectando$ | async) ?? false">
@@ -66,10 +66,10 @@
        SEÇÃO 2 — CONFIGURAR WI-FI via Bluetooth
       
   ═══════════════════════════════════════════════════════════════════════ -->
-  <ion-card color="secondary">
+  <ion-card>
     <ion-card-header>
       <ion-card-title>
-        <ion-icon name="wifi-outline" style="vertical-align: middle; margin-right: 6px;"></ion-icon>
+        <ion-icon name="wifi-outline" style="vertical-align: middle; margin-right: 6px; color: var(--ion-color-primary);"></ion-icon>
         Configurar Wi-Fi no Luy
       </ion-card-title>
       <ion-card-subtitle>Envia rede e senha via Bluetooth</ion-card-subtitle>
@@ -109,7 +109,7 @@
    
       <ion-button
         expand="block"
-        color="light"
+        color="primary"
         class="ion-margin-top"
         (click)="configurarWifi()"
         [disabled]="isConfiguring">
@@ -136,10 +136,10 @@
 
 
   
-  <ion-card color="light">
+  <ion-card>
     <ion-card-header>
       <ion-card-title>
-        <ion-icon name="globe-outline" style="vertical-align: middle; margin-right: 6px;"></ion-icon>
+        <ion-icon name="globe-outline" style="vertical-align: middle; margin-right: 6px; color: var(--ion-color-primary);"></ion-icon>
         Endereço Wi-Fi (IP / mDNS)
       </ion-card-title>
       <ion-card-subtitle>Usado pelo controle quando no modo Wi-Fi</ion-card-subtitle>
