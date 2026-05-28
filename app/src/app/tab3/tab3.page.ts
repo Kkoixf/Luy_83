@@ -23,6 +23,9 @@ import { DatabaseService } from '../services/sqlite';
 import { Database } from '../services/database';
 import { MedicaoService } from '../services/medicao.service';
 import jsPDF from 'jspdf';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 Chart.register(...registerables);
 
@@ -348,8 +351,38 @@ export class Tab3Page {
       pdf.text('As medições realizadas pela mão robótica Luy-83 são informativas e devem ser confirmadas pelo profissional responsável.',
         m, 285, { maxWidth: lp - m * 2 });
 
-      pdf.save(`medicao-${(paciente.nome || 'paciente').replace(/\s+/g, '_')}-${(medicao.data || '').replace(/\//g, '-')}.pdf`);
-      await this.notify.success('PDF gerado.');
+      const nomeArquivo = `medicao-${(paciente.nome || 'paciente').replace(/\s+/g, '_')}-${(medicao.data || '').replace(/\//g, '-')}.pdf`;
+
+      if (Capacitor.isNativePlatform()) {
+        // No APK o pdf.save() (download via blob) não funciona dentro do WebView:
+        // a notificação aparecia mas o arquivo não era salvo. Gravamos o PDF no
+        // dispositivo e abrimos a folha nativa de "Salvar/compartilhar".
+        const dataUri = pdf.output('datauristring');
+        const base64 = dataUri.substring(dataUri.indexOf(',') + 1);
+        await Filesystem.writeFile({
+          path: nomeArquivo,
+          data: base64,
+          directory: Directory.Cache,
+        });
+        const { uri } = await Filesystem.getUri({ path: nomeArquivo, directory: Directory.Cache });
+        try {
+          await Share.share({
+            title: 'Relatório de Medição Luy-83',
+            files: [uri],
+            dialogTitle: 'Salvar ou compartilhar PDF',
+          });
+          await this.notify.success('PDF gerado.');
+        } catch (shareErr: any) {
+          // Usuário fechou a folha de compartilhamento — o PDF já foi gerado.
+          const msg = String(shareErr?.message ?? '').toLowerCase();
+          if (!msg.includes('cancel') && !msg.includes('abort')) {
+            console.error('Erro ao compartilhar PDF:', shareErr);
+          }
+        }
+      } else {
+        pdf.save(nomeArquivo);
+        await this.notify.success('PDF gerado.');
+      }
     } catch (err) {
       console.error('Erro PDF:', err);
       await this.notify.error('Erro ao gerar PDF.');
