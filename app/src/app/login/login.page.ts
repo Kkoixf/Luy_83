@@ -50,10 +50,12 @@ export class LoginPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    
+    // Auto-login no cold start: só redireciona automaticamente quem já tem cadastro completo.
+    // Um usuário autenticado SEM doc (ex.: cadastro Google não finalizado) permanece no login,
+    // evitando o loop login <-> cadastro ao usar o botão "Voltar".
     this.authUnsubscribe = onAuthStateChanged(this.auth, async (user) => {
       if (user && !this.processandoLogin) {
-        await this.redirecionarPosLogin(user.uid);
+        await this.redirecionarPosLogin(user.uid, false);
       }
     });
   }
@@ -66,7 +68,7 @@ export class LoginPage implements OnInit, OnDestroy {
     }
   }
 
-  private async redirecionarPosLogin(uid: string) {
+  private async redirecionarPosLogin(uid: string, permitirCadastro = true) {
     try {
       const docRef = doc(this.firestore, 'usuarios', uid);
       const docSnap = await getDoc(docRef);
@@ -75,9 +77,10 @@ export class LoginPage implements OnInit, OnDestroy {
         const userData = docSnap.data();
         this.database.setUser(userData);
         await this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
-      } else {
+      } else if (permitirCadastro) {
         await this.router.navigate(['/cadastro'], { replaceUrl: true });
       }
+      // Sem doc e sem permissão de cadastro: permanece no login (evita o loop de telas).
     } catch (error) {
       console.error('Erro ao verificar cadastro:', error);
       this.notify.error('Erro ao verificar dados. Tente novamente.');

@@ -110,7 +110,16 @@
             <div class="input-container">
               <ion-label class="custom-label">CRM (número)</ion-label>
               <div class="custom-input-box">
-                <ion-input [(ngModel)]="dados.crm" name="crm" required></ion-input>
+                <ion-input
+                  [(ngModel)]="dados.crm"
+                  name="crm"
+                  type="tel"
+                  inputmode="numeric"
+                  (ionInput)="formatarRegistro($event)"
+                  (keypress)="apenasNumeros($event)"
+                  maxlength="8"
+                  placeholder="Apenas números"
+                  required></ion-input>
               </div>
             </div>
 
@@ -128,7 +137,16 @@
             <div class="input-container">
               <ion-label class="custom-label">COREN (número)</ion-label>
               <div class="custom-input-box">
-                <ion-input [(ngModel)]="dados.crm" name="coren" required></ion-input>
+                <ion-input
+                  [(ngModel)]="dados.crm"
+                  name="coren"
+                  type="tel"
+                  inputmode="numeric"
+                  (ionInput)="formatarRegistro($event)"
+                  (keypress)="apenasNumeros($event)"
+                  maxlength="8"
+                  placeholder="Apenas números"
+                  required></ion-input>
               </div>
             </div>
 

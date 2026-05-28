@@ -9,7 +9,7 @@ import {
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular/standalone';
 import { NotificationService } from '../services/notification.service';
-import { Auth, createUserWithEmailAndPassword, authState } from '@angular/fire/auth';
+import { Auth, createUserWithEmailAndPassword, authState, User } from '@angular/fire/auth';
 import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { Database } from '../services/database';
 import { addIcons } from 'ionicons';
@@ -81,18 +81,27 @@ export class CadastroPage implements OnInit {
   }
 
   ngOnInit() {
-    // Aguarda o authState resolver (em APK o currentUser pode ainda ser null no init)
+    // Fonte síncrona: ao chegar pelo login Google, signInWithCredential já resolveu
+    // e currentUser está disponível de imediato — preenche sem esperar o authState.
+    if (this.auth.currentUser) {
+      this.preencherDadosGoogle(this.auth.currentUser);
+      return;
+    }
+
+    // Cold start / APK: currentUser pode ainda ser null no init; aguarda o authState resolver.
     firstValueFrom(authState(this.auth).pipe(filter(u => u !== undefined)))
       .then(user => {
-        this.ngZone.run(() => {
-          if (user) {
-            this.googleFlow = true;
-            this.dados.email = user.email || '';
-            this.dados.nomeCompleto = user.displayName || '';
-          }
-        });
+        if (user) this.ngZone.run(() => this.preencherDadosGoogle(user));
       })
       .catch(() => { /* silencioso */ });
+  }
+
+  private preencherDadosGoogle(user: User) {
+    this.googleFlow = true;
+    // Em alguns casos o e-mail vem nulo no objeto raiz mas presente no providerData (Google).
+    const provedor = user.providerData?.find(p => !!p?.email);
+    this.dados.email = user.email || provedor?.email || '';
+    this.dados.nomeCompleto = user.displayName || provedor?.displayName || '';
   }
 
   async register() {
@@ -270,6 +279,13 @@ export class CadastroPage implements OnInit {
       value = value.replace(/(\d{2})(\d{1,5})/, '($1) $2');
     }
     this.dados.telefone = value;
+    if (event.target) event.target.value = value;
+  }
+
+  formatarRegistro(event: any, max = 8) {
+    let value = (event.target.value || '').replace(/\D/g, '');
+    if (value.length > max) value = value.substring(0, max);
+    this.dados.crm = value;
     if (event.target) event.target.value = value;
   }
 
