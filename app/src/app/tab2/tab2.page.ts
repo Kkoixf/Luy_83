@@ -131,9 +131,42 @@ export class Tab2Page {
         if (tipo.includes('Medir')) {
           this.medicaoIniciada = true;
           this.statusMedicao = tipo === 'Medir_Temperatura' ? 'Medindo temperatura' : 'Medindo batimentos e SpO2';
-          await this.aguardarResultado(tipo);
+         
+        const sub = this.bleService.dadosRecebidos$.subscribe((dados: string) => {
+        
+        if (dados.startsWith('RES:TEMP:')) {
+          const tempVal = parseFloat(dados.replace('RES:TEMP:', ''));
+          this.resultadoMedicao = { ...this.resultadoMedicao, temperatura: tempVal, bpm: this.resultadoMedicao?.bpm || 0, spo2: this.resultadoMedicao?.spo2 || 0 };
+          this.medicaoIniciada = false;
+          this.statusMedicao = '';
+          sub.unsubscribe(); // Cancela a inscrição ao receber o dado esperado
+        } 
+        
+        else if (dados.startsWith('RES:CARDIO:')) {
+          // Ex: "RES:CARDIO:BPM=75;SPO2=98"
+          const partes = dados.replace('RES:CARDIO:', '').split(';');
+          const bpmVal = parseInt(partes[0].split('=')[1], 10);
+          const spo2Val = parseInt(partes[1].split('=')[1], 10);
+          
+          this.resultadoMedicao = { ...this.resultadoMedicao, bpm: bpmVal, spo2: spo2Val, temperatura: this.resultadoMedicao?.temperatura || 0 };
+          this.medicaoIniciada = false;
+          this.statusMedicao = '';
+          sub.unsubscribe();
         }
-      } else {
+      });
+
+      // Implementar um timeout manual simples caso o ESP32 demore mais de 30 segundos
+      setTimeout(() => {
+        if (this.medicaoIniciada) {
+          this.medicaoIniciada = false;
+          this.statusMedicao = '';
+          sub.unsubscribe();
+          this.log('TIMEOUT: Falha ao receber resposta via Bluetooth.');
+        }
+      }, 30000);
+    }
+} else {
+  
         // Fluxo de conexão WI-FI (CapacitorHttp)
         this.medicaoIniciada = true;
         this.statusMedicao = tipo === 'Medir_Cardiaco' ? 'Medindo batimentos e SpO2' : 'Medindo temperatura';
