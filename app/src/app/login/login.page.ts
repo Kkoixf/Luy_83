@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonCard,
   IonCardHeader, IonCardTitle, IonCardContent, IonItem,
-  IonLabel, IonInput, IonButton, IonIcon
+  IonLabel, IonInput, IonButton, IonIcon, IonImg
 } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { NotificationService } from '../services/notification.service';
@@ -27,7 +27,7 @@ import { Database } from '../services/database';
   styleUrls: ['./login.page.scss'],
   standalone: true,
   imports: [
-    IonContent, IonHeader, IonTitle, IonToolbar, CommonModule,
+    IonContent, IonImg, IonHeader, IonTitle, IonToolbar, CommonModule,
     FormsModule, IonCard, IonCardHeader, IonCardTitle,
     IonCardContent, IonItem, IonLabel, IonInput, IonButton, IonIcon
   ]
@@ -61,7 +61,7 @@ export class LoginPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    
+
     if (this.authUnsubscribe) {
       this.authUnsubscribe();
       this.authUnsubscribe = null;

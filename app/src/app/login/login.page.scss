@@ -1,5 +1,5 @@
 .auth-wrapper {
-  --background: #E8EDF8; 
+  --background: #E8EDF8;
 
   .container-central {
     display: flex;
@@ -12,8 +12,8 @@
   .login-card {
     width: 100%;
     max-width: 360px;
-    border-radius: 28px; 
-    box-shadow: none; 
+    border-radius: 28px;
+    box-shadow: none;
     background: #ffffff;
     padding: 20px 10px;
   }
@@ -25,8 +25,15 @@
     .logo-placeholder {
       width: 75px;
       height: 75px;
-      background-color: #4285f4; 
+      background-color: #4285f4;
       border-radius: 18px;
+      margin: 0 auto 10px;
+    }
+    .logo{
+      width: 75px;
+      height: 75px;
+      border-radius: 18px;
+      overflow: hidden;
       margin: 0 auto 10px;
     }
 
@@ -54,7 +61,7 @@
       border: 1px solid #E0E0E0;
       border-radius: 12px;
       background: #ffffff;
-      
+
       ion-input {
         --padding-start: 15px;
         --padding-end: 15px;
