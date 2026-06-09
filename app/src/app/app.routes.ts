@@ -20,7 +20,7 @@ export const routes: Routes = [
     loadComponent: () => import('./password-recovery/password-recovery.page').then( m => m.PasswordRecoveryPage)
   },
   {
-    path: 'tabs',
+    path: 'menu',
     loadChildren: () => import('./tabs/tabs.routes').then((m) => m.routes),
     canActivate: [authGuard]
   },
