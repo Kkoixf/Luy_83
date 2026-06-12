@@ -1,0 +1,47 @@
+.splash-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #e1ebff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  overflow: hidden;
+}
+
+.sprite-animation {
+
+  width: 270px;
+  height: 270px;
+
+  background-image: url('/assets/splash-anim.png');
+  background-repeat: no-repeat;
+
+  /* Tamanho total da imagem: 4 cols × 270 = 1080px, 4 rows × 270 = 1080px */
+  background-size: 1080px 1080px;
+
+  will-change: background-position;
+  animation: playGrid 2.5s steps(1, end) infinite;
+}
+
+@keyframes playGrid {
+  0%    { background-position:    0px    0px; }  /* frame 0  – col 0, row 0 */
+  7.1%  { background-position: -270px    0px; }  /* frame 1  – col 1, row 0 */
+  14.2% { background-position: -540px    0px; }  /* frame 2  – col 2, row 0 */
+  21.4% { background-position: -810px    0px; }  /* frame 3  – col 3, row 0 */
+  28.5% { background-position:    0px -270px; }  /* frame 4  – col 0, row 1 */
+  35.7% { background-position: -270px -270px; }  /* frame 5  – col 1, row 1 */
+  42.8% { background-position: -540px -270px; }  /* frame 6  – col 2, row 1 */
+  50%   { background-position: -810px -270px; }  /* frame 7  – col 3, row 1 */
+  57.1% { background-position:    0px -540px; }  /* frame 8  – col 0, row 2 */
+  64.2% { background-position: -270px -540px; }  /* frame 9  – col 1, row 2 */
+  71.4% { background-position: -540px -540px; }  /* frame 10 – col 2, row 2 */
+  78.5% { background-position: -810px -540px; }  /* frame 11 – col 3, row 2 */
+  85.7% { background-position:    0px -810px; }  /* frame 12 – col 0, row 3 */
+  92.8% { background-position: -270px -810px; }  /* frame 13 – col 1, row 3 */
+  100%  { background-position:    0px    0px; }  /* loop     */
+}
+
