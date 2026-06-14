@@ -1,3 +1,57 @@
+// Posições de canais da mão robótica "Anotações"//
+
+//-------------------------------------
+
+Mindinho principal = 0 = numero 9
+mindinho falange de baixo = 1 = 1
+mindinho falange de cima = 2 = 2
+
+anelar principal = 3 =10
+anelar falange de baixo = 4 = 4
+anelar falange de cima = 5 = 3
+
+meioo principal = 6 = 11
+meio falange de baixo = 7 = 6
+meio falange de cima = 8 =  5
+
+indicador principal = 9 = 12
+indicador falange de baixo = 10 = 8
+indicador falange de cima = 11 = 7
+
+dedão falange cima = 13 = = cano meio
+dedao falange de baixo = 12 = seta
+dedão falange canto porca = 14 = 
+dedão falange principal = 15
+ 
+
+------------------------------------------
+Mindinho principal = 0 
+mindinho falange de baixo = 1 
+mindinho falange de cima = 2 
+
+anelar principal = 3 
+anelar falange de baixo = 4
+anelar falange de cima = 5 
+
+meioo principal = 6
+meio falange de baixo = 7 
+meio falange de cima = 8 
+
+indicador principal = 9 
+indicador falange de baixo = 10 
+indicador falange de cima = 11 
+
+dedão falange cima = 12 
+dedao falange de baico = 12 
+dedão principal = 15
+engranagem = 14 
+
+//-----------------FIM-----------------------//
+
+
+
+
+
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 #include <WiFi.h>
@@ -320,6 +374,11 @@ void gestoVezinho() {
 }
 // ================= TEMPERATURA =================
 
+
+
+
+
+
 void medirTemperatura() {
 
   atualizarDisplay("Fechando...", "...");
@@ -357,6 +416,13 @@ void medirTemperatura() {
   }
 
   ultimaTemperatura = soma / leituras;
+
+  String resposta = "RES:TEMP:" + String(ultimaTemperatura, 1);
+
+  pTxCharacteristic->setValue(resposta.c_str());
+  pTxCharacteristic->notify();
+
+Serial.println("Enviado BLE: " + resposta);
 
   erroTemperatura = false;
   temperaturaPronta = true;
@@ -602,6 +668,17 @@ if (leiturasBPM == 0) {
 }
 
 ultimoBPM = somaBPM / leiturasBPM;
+
+String resposta =
+  "RES:CARDIO:BPM=" +
+  String(ultimoBPM) +
+  ";SPO2=" +
+  String(ultimoSpO2);
+
+pTxCharacteristic->setValue(resposta.c_str());
+pTxCharacteristic->notify();
+
+Serial.println("Enviado BLE: " + resposta);
 
 erroCardiaco = false;
 cardiacoPronto = true;
@@ -876,14 +953,13 @@ else {
     pService->createCharacteristic(
       CHARACTERISTIC_UUID_RX,
       BLECharacteristic::PROPERTY_WRITE);
-
   pRxCharacteristic->setCallbacks(new MyCallbacks());
-
+   
   pTxCharacteristic =
     pService->createCharacteristic(
       CHARACTERISTIC_UUID_TX,
       BLECharacteristic::PROPERTY_NOTIFY);
-
+      pTxCharacteristic->addDescriptor(new BLE2902());
   pService->start();
   pServer->getAdvertising()->start();
   WiFi.mode(WIFI_STA);
