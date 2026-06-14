@@ -76,7 +76,7 @@ export class LoginPage implements OnInit, OnDestroy {
       if (docSnap.exists()) {
         const userData = docSnap.data();
         this.database.setUser(userData);
-        await this.router.navigate(['/menu/home'], { replaceUrl: true });
+        await this.router.navigate(['/tabs/tab1'], { replaceUrl: true });
       } else if (permitirCadastro) {
         await this.router.navigate(['/cadastro'], { replaceUrl: true });
       }

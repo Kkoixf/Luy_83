@@ -15,7 +15,7 @@ import {
   chevronBackOutline, chevronForwardOutline, downloadOutline,
   pulseOutline, medkitOutline, informationCircleOutline
 } from 'ionicons/icons';
-import { AlertController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular/standalone';
 import { NavController } from '@ionic/angular/standalone';
 import { NotificationService } from '../services/notification.service';
 import { Chart, registerables } from 'chart.js';
