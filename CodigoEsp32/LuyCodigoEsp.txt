@@ -181,7 +181,7 @@ void animacaoBoot() {
   // Mensagem digitada letra a letra
   const char* msg1 = "Mao Robotica";
   const char* msg2 = "ONLINE";
-  const char* msg3 = "Pronto p/ acao!";
+  const char* msg3 = "Pronto p/ medicao!";
 
   display.setCursor(0, 16);
   for (int i = 0; msg1[i] != '\0'; i++) {
@@ -1030,7 +1030,7 @@ void loop() {
     medirCardiaco();
   }
 
-  // Atualiza display com sinais vitais finais a cada segundo
+
   static unsigned long tempoAnteriorDisplay = 0;
   unsigned long tempoAtual = millis();
   if (tempoAtual - tempoAnteriorDisplay >= 1000) {
