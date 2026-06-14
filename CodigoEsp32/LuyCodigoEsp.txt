@@ -49,9 +49,6 @@ engranagem = 14
 //-----------------FIM-----------------------//
 
 
-
-
-
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 #include <WiFi.h>
@@ -78,8 +75,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // SENSOR
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
-// ================= MAX30105 =================
 
+// ================= MAX30105 =================
 MAX30105 particleSensor;
 
 // BPM
@@ -141,20 +138,271 @@ BLECharacteristic *pTxCharacteristic;
 
 #define LED_PIN 2
 
-// ================= OLED =================
+// ================= ANIMAÇÕES OLED =================
 
-void atualizarDisplay(String texto, String emoji) {
-
+// Animação de boot: texto digita letra a letra
+void animacaoBoot() {
+  // --- Tela 1: Logo ---
   display.clearDisplay();
+  display.setTextSize(3);
+  display.setTextColor(WHITE);
+  display.setCursor(10, 5);
+  display.print("LUY");
+  display.setCursor(10, 35);
+  display.print("-83");
+  display.display();
+  vTaskDelay(800 / portTICK_PERIOD_MS);
 
+  // Pisca 3x o logo
+  for (int i = 0; i < 3; i++) {
+    display.invertDisplay(true);
+    vTaskDelay(120 / portTICK_PERIOD_MS);
+    display.invertDisplay(false);
+    vTaskDelay(120 / portTICK_PERIOD_MS);
+  }
+  vTaskDelay(300 / portTICK_PERIOD_MS);
+
+  // --- Tela 2: "Iniciando sistema..." digitado ---
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.print("[ LUY-83 v1.0 ]");
+  display.display();
+  vTaskDelay(400 / portTICK_PERIOD_MS);
+
+  // Linha separadora aparece pixel a pixel
+  for (int x = 0; x <= 127; x += 4) {
+    display.drawFastHLine(0, 10, x, WHITE);
+    display.display();
+    vTaskDelay(8 / portTICK_PERIOD_MS);
+  }
+
+  // Mensagem digitada letra a letra
+  const char* msg1 = "Mao Robotica";
+  const char* msg2 = "ONLINE";
+  const char* msg3 = "Pronto p/ acao!";
+
+  display.setCursor(0, 16);
+  for (int i = 0; msg1[i] != '\0'; i++) {
+    display.print(msg1[i]);
+    display.display();
+    vTaskDelay(60 / portTICK_PERIOD_MS);
+  }
+
+  display.setCursor(0, 28);
+  for (int i = 0; msg2[i] != '\0'; i++) {
+    display.print(msg2[i]);
+    display.display();
+    vTaskDelay(80 / portTICK_PERIOD_MS);
+  }
+  // "ONLINE" pisca ao terminar
+  for (int i = 0; i < 2; i++) {
+    display.setTextColor(BLACK);
+    display.setCursor(0, 28);
+    display.print("ONLINE");
+    display.display();
+    vTaskDelay(150 / portTICK_PERIOD_MS);
+    display.setTextColor(WHITE);
+    display.setCursor(0, 28);
+    display.print("ONLINE");
+    display.display();
+    vTaskDelay(150 / portTICK_PERIOD_MS);
+  }
+
+  display.setCursor(0, 44);
+  for (int i = 0; msg3[i] != '\0'; i++) {
+    display.print(msg3[i]);
+    display.display();
+    vTaskDelay(55 / portTICK_PERIOD_MS);
+  }
+
+  // Barra de "loading"
+  display.setCursor(0, 56);
+  display.print("[");
+  display.display();
+  for (int i = 0; i < 10; i++) {
+    display.print("=");
+    display.display();
+    vTaskDelay(80 / portTICK_PERIOD_MS);
+  }
+  display.print("]");
+  display.display();
+  vTaskDelay(500 / portTICK_PERIOD_MS);
+}
+
+// Barra de progresso genérica (y: posição vertical)
+void desenharBarra(int y, int progresso, int total) {
+  int largura = map(progresso, 0, total, 0, 110);
+  display.drawRect(8, y, 112, 7, WHITE);
+  display.fillRect(8, y, largura, 7, WHITE);
+}
+
+// Coração pulsando (alterna tamanhos)
+void desenharCoracao(bool grande) {
+  if (grande) {
+    display.setTextSize(2);
+    display.setCursor(108, 0);
+    display.print("<3");
+  } else {
+    display.setTextSize(1);
+    display.setCursor(112, 4);
+    display.print("<3");
+  }
+}
+
+// ================= OLED GERAL =================
+
+// Sobrecarga 1: texto simples + emoji
+void atualizarDisplay(String texto, String emoji) {
+  display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
   display.println(texto);
-
   display.setTextSize(3);
   display.setCursor(40, 30);
   display.println(emoji);
+  display.display();
+}
+
+// Sobrecarga 2: resultado final dos sinais vitais
+void atualizarDisplay(float temp, int batimentos, int oxigenio) {
+  display.clearDisplay();
+
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.print("TEMPERATURA:");
+
+  display.setTextSize(2);
+  display.setCursor(10, 12);
+  display.print(temp, 1);
+  display.write(247);
+  display.print("C");
+
+  display.drawFastHLine(0, 32, 128, SSD1306_WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(0, 38);
+  display.print("SINAIS VITAIS:");
+
+  display.setTextSize(2);
+  display.setCursor(0, 50);
+  display.print(batimentos);
+  display.setTextSize(1);
+  display.print("bpm  ");
+
+  display.setTextSize(2);
+  display.setCursor(70, 50);
+  display.print(oxigenio);
+  display.setTextSize(1);
+  display.print("%");
+
+  display.display();
+}
+
+// ================= ANIMAÇÃO: TEMPERATURA EM TEMPO REAL =================
+
+void displayTemperaturaAoVivo(float tempAtual, int amostras, int totalAmostras) {
+  display.clearDisplay();
+
+  // Título
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.print("MEDINDO TEMP...");
+
+  // Ícone de termômetro simples (desenhado com pixels)
+  display.drawRect(118, 2, 8, 22, WHITE);
+  display.fillRect(119, 3, 6, map((int)tempAtual, 20, 45, 0, 18), WHITE);
+
+  // Valor atual GRANDE
+  display.setTextSize(3);
+  display.setCursor(0, 16);
+  display.print(tempAtual, 1);
+  display.setTextSize(1);
+  display.print((char)247);
+  display.print("C");
+
+  // Barra de progresso das amostras
+  display.setCursor(0, 47);
+  display.print("Amostras: ");
+  display.print(amostras);
+  display.print("/");
+  display.print(totalAmostras);
+  desenharBarra(55, amostras, totalAmostras);
+
+  display.display();
+}
+
+// ================= ANIMAÇÃO: COLETA SPO2 =================
+
+void displayColetaSPO2(int amostra, int total) {
+  display.clearDisplay();
+
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.print("COLETANDO SpO2...");
+
+  // Ondinha animada (senoide fake com barras)
+  for (int x = 0; x < 128; x += 8) {
+    int altura = (x + amostra * 4) % 16;
+    display.drawFastVLine(x, 20 + altura, 4, WHITE);
+  }
+
+  display.setCursor(0, 38);
+  display.print("Amostras: ");
+  display.setTextSize(2);
+  display.setCursor(60, 32);
+  display.print(amostra);
+  display.setTextSize(1);
+  display.print("/");
+  display.print(total);
+
+  desenharBarra(55, amostra, total);
+
+  display.display();
+}
+
+// ================= ANIMAÇÃO: BPM EM TEMPO REAL =================
+
+void displayBPMAoVivo(float bpmAtual, int batimentosDetectados, unsigned long tempoDecorrido, unsigned long tempoTotal) {
+  display.clearDisplay();
+
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.print("MEDINDO BPM...");
+
+  // Coração pulsando baseado no BPM (alterna a cada ~meio beat)
+  static bool coracaoGrande = false;
+  static unsigned long ultimoFlip = 0;
+  unsigned long intervaloFlip = (bpmAtual > 40) ? (30000 / bpmAtual) : 500;
+  if (millis() - ultimoFlip > intervaloFlip) {
+    coracaoGrande = !coracaoGrande;
+    ultimoFlip = millis();
+  }
+  desenharCoracao(coracaoGrande);
+
+  // BPM atual (grande)
+  display.setTextSize(3);
+  display.setCursor(0, 16);
+  if (bpmAtual > 0) {
+    display.print((int)bpmAtual);
+  } else {
+    display.print("---");
+  }
+  display.setTextSize(1);
+  display.setCursor(0, 40);
+  display.print("BPM  Beats:");
+  display.print(batimentosDetectados);
+
+  // Barra de tempo restante
+  display.setCursor(0, 50);
+  display.print("Tempo:");
+  int segundosRestantes = (tempoTotal - tempoDecorrido) / 1000;
+  display.print(segundosRestantes);
+  display.print("s");
+  desenharBarra(57, tempoDecorrido, tempoTotal);
 
   display.display();
 }
@@ -162,143 +410,100 @@ void atualizarDisplay(String texto, String emoji) {
 // ================= SERVOS =================
 
 void desligarServos() {
-
   for (int ch = 0; ch < 16; ch++) {
-
     pwm.setPWM(ch, 0, 4096);
   }
-
   Serial.println("Servos em repouso.");
 }
 
 void fecharMao() {
-
   Serial.println("Fechar Mao");
-
   for (int angle0 = 0; angle0 <= 140; angle0 += 5) {
-
     int pulse0 = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
     int pulse6 = map(angle0, 0, 180, SERVOMIN, SERVOMAX);
-
     pwm.setPWM(0, 0, pulse0);
     pwm.setPWM(3, 0, pulse0);
     pwm.setPWM(13, 0, pulse0);
-
     pwm.setPWM(6, 0, pulse6);
     pwm.setPWM(9, 0, pulse6);
     pwm.setPWM(12, 0, pulse6);
     pwm.setPWM(14, 0, pulse6);
     pwm.setPWM(15, 0, pulse6);
-
     if (angle0 > 60) {
-
       int angle12 = angle0 - 60;
-
-      int pulse1 = map(angle12, 0, 80,
-                       SERVOMIN,
-                       map(140, 0, 180, SERVOMIN, SERVOMAX));
-
-      int pulse2 = map(angle12, 0, 80,
-                       SERVOMAX,
-                       map(140, 0, 180, SERVOMAX, SERVOMIN));
-
+      int pulse1 = map(angle12, 0, 80, SERVOMIN, map(140, 0, 180, SERVOMIN, SERVOMAX));
+      int pulse2 = map(angle12, 0, 80, SERVOMAX, map(140, 0, 180, SERVOMAX, SERVOMIN));
       pwm.setPWM(1, 0, pulse1);
       pwm.setPWM(4, 0, pulse1);
       pwm.setPWM(7, 0, pulse1);
       pwm.setPWM(10, 0, pulse1);
-
       pwm.setPWM(2, 0, pulse2);
       pwm.setPWM(5, 0, pulse2);
       pwm.setPWM(8, 0, pulse2);
       pwm.setPWM(11, 0, pulse2);
     }
-
     yield();
     vTaskDelay(20 / portTICK_PERIOD_MS);
   }
-
   desligarServos();
-
   atualizarDisplay("Mao Fechada", "---");
 }
 
 void abrirMao() {
-
   Serial.println("Abrir Mao");
-
   for (int angle0 = 180; angle0 >= 0; angle0 -= 5) {
-
     int pulse0 = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
     int pulse6 = map(angle0, 0, 180, SERVOMIN, SERVOMAX);
-
     pwm.setPWM(0, 0, pulse0);
     pwm.setPWM(3, 0, pulse0);
     pwm.setPWM(13, 0, pulse0);
-
     pwm.setPWM(6, 0, pulse6);
     pwm.setPWM(9, 0, pulse6);
     pwm.setPWM(12, 0, pulse6);
     pwm.setPWM(14, 0, pulse6);
     pwm.setPWM(15, 0, pulse6);
-
     if (angle0 < 120) {
-
       int pulse1 = map(angle0, 0, 120, SERVOMIN, SERVOMAX);
-
       int pulse2 = map(angle0, 0, 120, SERVOMAX, SERVOMIN);
-
       pwm.setPWM(1, 0, pulse1);
       pwm.setPWM(4, 0, pulse1);
       pwm.setPWM(7, 0, pulse1);
       pwm.setPWM(10, 0, pulse1);
-
       pwm.setPWM(2, 0, pulse2);
       pwm.setPWM(5, 0, pulse2);
       pwm.setPWM(8, 0, pulse2);
       pwm.setPWM(11, 0, pulse2);
     }
-
     yield();
     vTaskDelay(20 / portTICK_PERIOD_MS);
   }
-
   desligarServos();
-
   atualizarDisplay("Mao Aberta", "O");
 }
 
 void gestoJoinha() {
-  Serial.println("Gesto: Joinha 👍 (Seguro)");
+  Serial.println("Gesto: Joinha");
   for (int angle0 = 0; angle0 <= 140; angle0 += 5) {
     int p_inv_val = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
     int p_nor_val = map(angle0, 0, 180, SERVOMIN, SERVOMAX);
-
-    pwm.setPWM(0, 0, p_inv_val);  // Mindinho
-    pwm.setPWM(3, 0, p_inv_val);  // Anelar
-    pwm.setPWM(6, 0, p_nor_val);  // Médio
-    pwm.setPWM(9, 0, p_nor_val);  // Indicador
-
+    pwm.setPWM(0, 0, p_inv_val);
+    pwm.setPWM(3, 0, p_inv_val);
+    pwm.setPWM(6, 0, p_nor_val);
+    pwm.setPWM(9, 0, p_nor_val);
     pwm.setPWM(13, 0, map(0, 0, 180, SERVOMAX, SERVOMIN));
     pwm.setPWM(14, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(15, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
-
     if (angle0 > 60) {
       int angle12 = angle0 - 60;
       int p1 = map(angle12, 0, 80, SERVOMIN, map(140, 0, 180, SERVOMIN, SERVOMAX));
       int p2 = map(angle12, 0, 80, SERVOMAX, map(140, 0, 180, SERVOMAX, SERVOMIN));
-
-      pwm.setPWM(1, 0, p1);
-      pwm.setPWM(2, 0, p2);
-      pwm.setPWM(4, 0, p1);
-      pwm.setPWM(5, 0, p2);
-      pwm.setPWM(7, 0, p1);
-      pwm.setPWM(8, 0, p2);
-      pwm.setPWM(10, 0, p1);
-      pwm.setPWM(11, 0, p2);
+      pwm.setPWM(1, 0, p1); pwm.setPWM(2, 0, p2);
+      pwm.setPWM(4, 0, p1); pwm.setPWM(5, 0, p2);
+      pwm.setPWM(7, 0, p1); pwm.setPWM(8, 0, p2);
+      pwm.setPWM(10, 0, p1); pwm.setPWM(11, 0, p2);
     }
     delay(20);
   }
-
   desligarServos();
 }
 
@@ -308,35 +513,25 @@ void nao() {
   for (int angle0 = 0; angle0 <= 140; angle0 += 6) {
     int p_inv_val = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
     int p_nor_val = map(angle0, 0, 180, SERVOMIN, SERVOMAX);
-
     pwm.setPWM(0, 0, p_inv_val);
     pwm.setPWM(3, 0, p_inv_val);
     pwm.setPWM(6, 0, p_nor_val);
     pwm.setPWM(14, 0, p_nor_val);
     pwm.setPWM(15, 0, p_nor_val);
-
     pwm.setPWM(9, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
-
     if (angle0 > 60) {
       int angle12 = angle0 - 60;
       int p1 = map(angle12, 0, 80, SERVOMIN, map(140, 0, 180, SERVOMIN, SERVOMAX));
       int p2 = map(angle12, 0, 80, SERVOMAX, map(140, 0, 180, SERVOMAX, SERVOMIN));
-
-      pwm.setPWM(1, 0, p1);
-      pwm.setPWM(2, 0, p2);
-      pwm.setPWM(4, 0, p1);
-      pwm.setPWM(5, 0, p2);
-      pwm.setPWM(7, 0, p1);
-      pwm.setPWM(8, 0, p2);
-      pwm.setPWM(14, 0, p1);
-      pwm.setPWM(15, 0, p1);
-
+      pwm.setPWM(1, 0, p1); pwm.setPWM(2, 0, p2);
+      pwm.setPWM(4, 0, p1); pwm.setPWM(5, 0, p2);
+      pwm.setPWM(7, 0, p1); pwm.setPWM(8, 0, p2);
+      pwm.setPWM(14, 0, p1); pwm.setPWM(15, 0, p1);
       pwm.setPWM(10, 0, map(0, 0, 180, SERVOMIN, SERVOMAX));
       pwm.setPWM(11, 0, map(0, 0, 180, SERVOMAX, SERVOMIN));
     }
     delay(20);
   }
-
   for (int r = 0; r < 6; r++) {
     pwm.setPWM(10, 0, map(50, 0, 180, SERVOMIN, SERVOMAX));
     pwm.setPWM(11, 0, map(50, 0, 180, SERVOMAX, SERVOMIN));
@@ -349,21 +544,17 @@ void nao() {
 }
 
 void gestoVezinho() {
-  Serial.println("Gesto: Vezinho ✌️");
+  Serial.println("Gesto: Vezinho");
   for (int angle0 = 0; angle0 <= 180; angle0 += 5) {
     int pulse0 = map(angle0, 0, 180, SERVOMAX, SERVOMIN);
     pwm.setPWM(0, 0, pulse0);
     pwm.setPWM(3, 0, pulse0);
-
     if (angle0 > 60) {
       int angle12 = angle0 - 60;
       int pulse1 = map(angle12, 0, 120, SERVOMIN, SERVOMAX);
       int pulse2 = map(angle12, 0, 120, SERVOMAX, SERVOMIN);
-
-      pwm.setPWM(1, 0, pulse1);
-      pwm.setPWM(2, 0, pulse2);
-      pwm.setPWM(4, 0, pulse1);
-      pwm.setPWM(5, 0, pulse2);
+      pwm.setPWM(1, 0, pulse1); pwm.setPWM(2, 0, pulse2);
+      pwm.setPWM(4, 0, pulse1); pwm.setPWM(5, 0, pulse2);
       pwm.setPWM(12, 0, pulse2);
       pwm.setPWM(14, 0, pulse2);
       pwm.setPWM(13, 0, pulse2);
@@ -372,450 +563,352 @@ void gestoVezinho() {
   }
   desligarServos();
 }
-// ================= TEMPERATURA =================
 
-
-
-
-
+// ================= TEMPERATURA (com animação) =================
 
 void medirTemperatura() {
-
   atualizarDisplay("Fechando...", "...");
-
   fecharMao();
   vTaskDelay(300 / portTICK_PERIOD_MS);
 
   float soma = 0;
   int leituras = 0;
+  const int TOTAL_AMOSTRAS = 60; // ~3s a 50ms por amostra
 
   unsigned long inicio = millis();
   while (millis() - inicio < 3000) {
     float temp = mlx.readObjectTempC();
     if (!isnan(temp) && temp > -40 && temp < 150) {
-
       soma += temp;
       leituras++;
+      float mediaAtual = soma / leituras;
+
+      // Animação ao vivo
+      displayTemperaturaAoVivo(mediaAtual, leituras, TOTAL_AMOSTRAS);
 
       Serial.print("Temp: ");
       Serial.println(temp);
     }
-
     yield();
     vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 
   if (leituras == 0) {
-
     erroTemperatura = true;
     temperaturaPronta = true;
     atualizarDisplay("Erro", "X");
     abrirMao();
-
     return;
   }
 
   ultimaTemperatura = soma / leituras;
 
-  String resposta = "RES:TEMP:" + String(ultimaTemperatura, 1);
+  // Resultado piscando 2x antes de mostrar tela final
+  for (int i = 0; i < 2; i++) {
+    display.invertDisplay(true);
+    vTaskDelay(150 / portTICK_PERIOD_MS);
+    display.invertDisplay(false);
+    vTaskDelay(150 / portTICK_PERIOD_MS);
+  }
 
+  String resposta = "RES:TEMP:" + String(ultimaTemperatura, 1);
   pTxCharacteristic->setValue(resposta.c_str());
   pTxCharacteristic->notify();
-
-Serial.println("Enviado BLE: " + resposta);
+  Serial.println("Enviado BLE: " + resposta);
 
   erroTemperatura = false;
   temperaturaPronta = true;
 
   Serial.print("Media: ");
   Serial.println(ultimaTemperatura);
-  atualizarDisplay(
-    "Temp: " + String(ultimaTemperatura, 1) + "C",
-    "OK");
 
-  vTaskDelay(100 / portTICK_PERIOD_MS);
+  // Exibe resultado de forma clara
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(20, 0);
+  display.print("RESULTADO TEMP");
+  display.drawFastHLine(0, 10, 128, WHITE);
+  display.setTextSize(3);
+  display.setCursor(5, 20);
+  display.print(ultimaTemperatura, 1);
+  display.setTextSize(2);
+  display.setCursor(5, 50);
+  display.write(247);
+  display.print("Celsius");
+  display.display();
 
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
   abrirMao();
 }
 
+// ================= BATIMENTO / SPO2 (com animação) =================
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ================= BATIMENTO / SPO2 =================
 void medirCardiaco() {
-
   atualizarDisplay("Medindo...", "<3");
-
   fecharMao();
-
   vTaskDelay(800 / portTICK_PERIOD_MS);
 
   erroCardiaco = false;
   cardiacoPronto = false;
 
-  // RESET BPM
   rateSpot = 0;
   beatAvg = 0;
   beatsPerMinute = 0;
   lastBeat = 0;
-
   ultimoBPM = 0;
   ultimoSpO2 = 0;
 
-  // LIMPA FIFO
   while (particleSensor.available()) {
     particleSensor.getRed();
     particleSensor.getIR();
     particleSensor.nextSample();
   }
 
-  // =========================
-  // AGUARDA DEDO
-  // =========================
-
   long irValue = particleSensor.getIR();
-
   Serial.print("IR Inicial: ");
   Serial.println(irValue);
 
   if (irValue < FINGER_ON) {
-
     erroCardiaco = true;
     cardiacoPronto = true;
-
     atualizarDisplay("Sem dedo", "X");
-
     abrirMao();
-
     return;
   }
 
   // =========================
-  // SPO2
+  // SPO2 com animação
   // =========================
-
   Serial.println("Coletando SpO2...");
 
   for (byte i = 0; i < BUFFER_SIZE; i++) {
-
     while (!particleSensor.available()) {
-
       particleSensor.check();
-
       yield();
-
       vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 
     redBuffer[i] = particleSensor.getRed();
     irBuffer[i] = particleSensor.getIR();
 
-    Serial.print("IR: ");
-    Serial.print(irBuffer[i]);
-
-    Serial.print(" RED: ");
-    Serial.println(redBuffer[i]);
+    Serial.print("IR: "); Serial.print(irBuffer[i]);
+    Serial.print(" RED: "); Serial.println(redBuffer[i]);
 
     particleSensor.nextSample();
+
+    // Atualiza display a cada 5 amostras para não travar
+    if (i % 5 == 0) {
+      displayColetaSPO2(i + 1, BUFFER_SIZE);
+    }
   }
 
   maxim_heart_rate_and_oxygen_saturation(
-    irBuffer,
-    BUFFER_SIZE,
-    redBuffer,
-    &spo2,
-    &validSPO2,
-    &heartRate,
-    &validHeartRate
+    irBuffer, BUFFER_SIZE, redBuffer,
+    &spo2, &validSPO2,
+    &heartRate, &validHeartRate
   );
 
   Serial.print("SpO2 calculado: ");
   Serial.println(spo2);
 
   if (!(validSPO2 && spo2 > 80 && spo2 <= 100)) {
-
     erroCardiaco = true;
     cardiacoPronto = true;
-
     atualizarDisplay("Erro SpO2", "X");
-
     abrirMao();
-
     return;
   }
 
   ultimoSpO2 = spo2;
 
-  // =========================
-  // BPM
-  // =========================
+  // Mostra SpO2 brevemente antes do BPM
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.print("SpO2 OK!");
+  display.setTextSize(3);
+  display.setCursor(10, 20);
+  display.print(ultimoSpO2);
+  display.setTextSize(2);
+  display.setCursor(10, 50);
+  display.print("%  O2");
+  display.display();
+  vTaskDelay(1500 / portTICK_PERIOD_MS);
 
+  // =========================
+  // BPM com animação
+  // =========================
   Serial.println("Lendo BPM...");
 
-float somaBPM = 0;
-int leiturasBPM = 0;
+  float somaBPM = 0;
+  int leiturasBPM = 0;
+  lastBeat = 0;
+  float ultimoBPMInstantaneo = 0;
 
-lastBeat = 0;
+  unsigned long inicio = millis();
+  const unsigned long DURACAO_BPM = 10000;
 
-unsigned long inicio = millis();
+  while (millis() - inicio < DURACAO_BPM) {
+    while (!particleSensor.available()) {
+      particleSensor.check();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
 
-while (millis() - inicio < 10000) {
+    long irValue = particleSensor.getIR();
+    particleSensor.nextSample();
 
-  // ESPERA NOVA AMOSTRA
-  while (!particleSensor.available()) {
+    Serial.print("IR BPM: ");
+    Serial.println(irValue);
 
-    particleSensor.check();
+    if (irValue < FINGER_ON) {
+      Serial.println("Dedo removido");
+      erroCardiaco = true;
+      cardiacoPronto = true;
+      atualizarDisplay("Sem dedo", "X");
+      abrirMao();
+      return;
+    }
 
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    if (checkForBeat(irValue)) {
+      if (lastBeat == 0) {
+        lastBeat = millis();
+        Serial.println("Primeiro beat");
+        continue;
+      }
+
+      long delta = millis() - lastBeat;
+      lastBeat = millis();
+      beatsPerMinute = 60.0 / (delta / 1000.0);
+
+      if (beatsPerMinute > 40 && beatsPerMinute < 220) {
+        somaBPM += beatsPerMinute;
+        leiturasBPM++;
+        ultimoBPMInstantaneo = beatsPerMinute;
+        Serial.print("BPM: ");
+        Serial.println(beatsPerMinute);
+      }
+    }
+
+    // Atualiza display com animação de BPM ao vivo
+    static unsigned long ultimoFrameDisplay = 0;
+    if (millis() - ultimoFrameDisplay > 100) {
+      ultimoFrameDisplay = millis();
+      float bpmMostrar = (leiturasBPM > 0) ? (somaBPM / leiturasBPM) : 0;
+      displayBPMAoVivo(bpmMostrar, leiturasBPM, millis() - inicio, DURACAO_BPM);
+    }
+
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 
-  // LE NOVA AMOSTRA
-  long irValue = particleSensor.getIR();
-
-  // AVANCA FIFO
-  particleSensor.nextSample();
-
-  Serial.print("IR BPM: ");
-  Serial.println(irValue);
-
-  // VERIFICA DEDO
-  if (irValue < FINGER_ON) {
-
-    Serial.println("Dedo removido");
-
+  // =========================
+  // MEDIA FINAL
+  // =========================
+  if (leiturasBPM == 0) {
     erroCardiaco = true;
     cardiacoPronto = true;
-
-    atualizarDisplay("Sem dedo", "X");
-
+    atualizarDisplay("Erro BPM", "X");
     abrirMao();
-
     return;
   }
 
+  ultimoBPM = somaBPM / leiturasBPM;
 
+  String resposta =
+    "RES:CARDIO:BPM=" + String(ultimoBPM) +
+    ";SPO2=" + String(ultimoSpO2);
 
-  // DETECTA BATIMENTO
-  if (checkForBeat(irValue)) {
+  pTxCharacteristic->setValue(resposta.c_str());
+  pTxCharacteristic->notify();
+  Serial.println("Enviado BLE: " + resposta);
 
-    // IGNORA PRIMEIRO BEAT
-    if (lastBeat == 0) {
-
-      lastBeat = millis();
-
-      Serial.println("Primeiro beat");
-
-      continue;
-    }
-
-    long delta = millis() - lastBeat;
-
-    lastBeat = millis();
-
-    beatsPerMinute = 60.0 / (delta / 1000.0);
-
-    // BPM VALIDO
-    if (beatsPerMinute > 40 && beatsPerMinute < 220) {
-
-      somaBPM += beatsPerMinute;
-
-      leiturasBPM++;
-
-      Serial.print("BPM: ");
-      Serial.println(beatsPerMinute);
-    }
-  }
-
-  vTaskDelay(5 / portTICK_PERIOD_MS);
-}
-
-// =========================
-// MEDIA FINAL
-// =========================
-
-if (leiturasBPM == 0) {
-
-  erroCardiaco = true;
+  erroCardiaco = false;
   cardiacoPronto = true;
 
-  atualizarDisplay("Erro BPM", "X");
+  Serial.print("Media BPM: ");
+  Serial.println(ultimoBPM);
+
+  // Resultado piscando
+  for (int i = 0; i < 2; i++) {
+    display.invertDisplay(true);
+    vTaskDelay(150 / portTICK_PERIOD_MS);
+    display.invertDisplay(false);
+    vTaskDelay(150 / portTICK_PERIOD_MS);
+  }
+
+  // Tela de resultado cardíaco final
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(20, 0);
+  display.print("RESULTADO CARDIO");
+  display.drawFastHLine(0, 10, 128, WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(0, 14);
+  display.print("BPM:");
+  display.setTextSize(3);
+  display.setCursor(32, 12);
+  display.print(ultimoBPM);
+
+  display.drawFastHLine(0, 40, 128, WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(0, 44);
+  display.print("SpO2:");
+  display.setTextSize(3);
+  display.setCursor(40, 44);
+  display.print(ultimoSpO2);
+  display.setTextSize(1);
+  display.print("%");
+
+  display.display();
+  vTaskDelay(3000 / portTICK_PERIOD_MS);
 
   abrirMao();
-
-  return;
 }
-
-ultimoBPM = somaBPM / leiturasBPM;
-
-String resposta =
-  "RES:CARDIO:BPM=" +
-  String(ultimoBPM) +
-  ";SPO2=" +
-  String(ultimoSpO2);
-
-pTxCharacteristic->setValue(resposta.c_str());
-pTxCharacteristic->notify();
-
-Serial.println("Enviado BLE: " + resposta);
-
-erroCardiaco = false;
-cardiacoPronto = true;
-
-Serial.print("Media BPM: ");
-Serial.println(ultimoBPM);
-
-atualizarDisplay(
-  "BPM:" + String(ultimoBPM),
-  "OK"
-);
-
-abrirMao();
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ================= BLE =================
 
 class MyCallbacks : public BLECharacteristicCallbacks {
-
   void onWrite(BLECharacteristic *pCharacteristic) {
-
     String value = pCharacteristic->getValue();
     if (value.length() == 0) return;
     Serial.println("BLE: " + value);
     if (value.startsWith("CMD:")) {
       String tipo = value.substring(4);
       tipo.trim();
-      if (tipo == "abrir") {
-        abrirMao();
-      } else if (tipo == "fechar") {
-        fecharMao();
-      } else if (tipo == "joinha") {
-        gestoJoinha();
-      } else if (tipo == "nao") {
-        nao();
-      } else if (tipo == "vezinho") {
-        gestoVezinho();
-      } else if (tipo == "Medir_Temperatura") {
-        iniciarMedicaoTemperatura = true;
-      } else if (tipo == "Medir_Cardiaco") {
-        iniciarMedicaoCardiaca = true;
-      }
-
-
+      if (tipo == "abrir") { abrirMao(); }
+      else if (tipo == "fechar") { fecharMao(); }
+      else if (tipo == "joinha") { gestoJoinha(); }
+      else if (tipo == "nao") { nao(); }
+      else if (tipo == "vezinho") { gestoVezinho(); }
+      else if (tipo == "Medir_Temperatura") { iniciarMedicaoTemperatura = true; }
+      else if (tipo == "Medir_Cardiaco") { iniciarMedicaoCardiaca = true; }
       return;
     }
 
     int ssidIndex = value.indexOf("SSID:");
     int passIndex = value.indexOf(";PASS:");
-
     if (ssidIndex >= 0 && passIndex >= 0) {
-
       String ssid = value.substring(ssidIndex + 5, passIndex);
       String pass = value.substring(passIndex + 6);
-
       ssid.trim();
       pass.trim();
-
       WiFi.begin(ssid.c_str(), pass.c_str());
       Serial.println("Conectando WiFi...");
     }
   }
 };
 
-
 // ================= WEB =================
 
 void handleCommand() {
   server.sendHeader("Access-Control-Allow-Origin", "*");
   String tipo = server.arg("tipo");
-  
-  if (tipo == "abrir") {
-    abrirMao();
-    server.send(200, "text/plain", "OK");
-  }
-  else if (tipo == "fechar") {
-    fecharMao();
-    server.send(200, "text/plain", "OK");
-  } 
-  else if (tipo == "joinha") {
-    gestoJoinha();
-    server.send(200, "text/plain", "OK");
-  } 
-  else if (tipo == "nao") {
-    nao();
-    server.send(200, "text/plain", "OK");
-  }
-  else if (tipo == "vezinho") {
-    gestoVezinho();
-    server.send(200, "text/plain", "OK");
-  }
+  if (tipo == "abrir") { abrirMao(); server.send(200, "text/plain", "OK"); }
+  else if (tipo == "fechar") { fecharMao(); server.send(200, "text/plain", "OK"); }
+  else if (tipo == "joinha") { gestoJoinha(); server.send(200, "text/plain", "OK"); }
+  else if (tipo == "nao") { nao(); server.send(200, "text/plain", "OK"); }
+  else if (tipo == "vezinho") { gestoVezinho(); server.send(200, "text/plain", "OK"); }
   else if (tipo == "Medir_Temperatura") {
     iniciarMedicaoTemperatura = true;
     server.send(200, "application/json", "{\"status\":\"iniciado\"}");
@@ -824,122 +917,69 @@ void handleCommand() {
     iniciarMedicaoCardiaca = true;
     server.send(200, "application/json", "{\"status\":\"iniciado\"}");
   }
-  else {
-    server.send(400, "text/plain", "Comando desconhecido");
-  }
+  else { server.send(400, "text/plain", "Comando desconhecido"); }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 void handleTemperatura() {
   server.sendHeader("Access-Control-Allow-Origin", "*");
-
   if (!temperaturaPronta) {
     server.send(202, "application/json", "{\"status\":\"aguardando\"}");
     return;
   }
-
   if (erroTemperatura) {
     server.send(500, "application/json", "{\"erro\":\"sensor\"}");
     return;
   }
-
   String jsonResposta = "{\"temp\": " + String(ultimaTemperatura, 1) + "}";
   server.send(200, "application/json", jsonResposta);
 }
 
 void handleCardiaco() {
   server.sendHeader("Access-Control-Allow-Origin", "*");
-
   if (!cardiacoPronto) {
     server.send(202, "application/json", "{\"status\":\"aguardando\"}");
     return;
   }
-
   if (erroCardiaco) {
     server.send(500, "application/json", "{\"erro\":\"sensor\"}");
     return;
   }
-
   String resposta = "{\"bpm\":" + String(ultimoBPM) + ",\"spo2\":" + String(ultimoSpO2) + "}";
   server.send(200, "application/json", resposta);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ================= SETUP =================
 
 void setup() {
-
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
   Wire.begin(21, 22);
+
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println("Erro OLED");
-  }  
-  atualizarDisplay("Luy-83", "ON");
+  }
 
-  
+  // ANIMAÇÃO DE BOOT DO LUY-83
+  animacaoBoot();
+
   if (!mlx.begin()) {
     Serial.println("Erro MLX90614");
   }
 
-  // MAX30105
-if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
-  Serial.println("MAX30105 nao encontrado");
-}
-else {
-
-  byte ledBrightness = 0x1F;
-  byte sampleAverage = 4;
-  byte ledMode = 2;
-  int sampleRate = 100;
-  int pulseWidth = 411;
-  int adcRange = 4096;
-
-  particleSensor.setup(
-    ledBrightness,
-    sampleAverage,
-    ledMode,
-    sampleRate,
-    pulseWidth,
-    adcRange
-  );
-
-  particleSensor.setPulseAmplitudeRed(0x1F);
-  particleSensor.setPulseAmplitudeIR(0x1F);
-  particleSensor.setPulseAmplitudeGreen(0);
-}
+  if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
+    Serial.println("MAX30105 nao encontrado");
+  } else {
+    byte ledBrightness = 0x1F;
+    byte sampleAverage = 4;
+    byte ledMode = 2;
+    int sampleRate = 100;
+    int pulseWidth = 411;
+    int adcRange = 4096;
+    particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange);
+    particleSensor.setPulseAmplitudeRed(0x1F);
+    particleSensor.setPulseAmplitudeIR(0x1F);
+    particleSensor.setPulseAmplitudeGreen(0);
+  }
 
   pwm.begin();
   pwm.setPWMFreq(50);
@@ -947,19 +987,13 @@ else {
 
   BLEDevice::init("Luy83_Mao_Robotica");
   BLEServer *pServer = BLEDevice::createServer();
-  BLEService *pService =
-    pServer->createService(SERVICE_UUID);
-  pRxCharacteristic =
-    pService->createCharacteristic(
-      CHARACTERISTIC_UUID_RX,
-      BLECharacteristic::PROPERTY_WRITE);
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+  pRxCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_UUID_RX, BLECharacteristic::PROPERTY_WRITE);
   pRxCharacteristic->setCallbacks(new MyCallbacks());
-   
-  pTxCharacteristic =
-    pService->createCharacteristic(
-      CHARACTERISTIC_UUID_TX,
-      BLECharacteristic::PROPERTY_NOTIFY);
-      pTxCharacteristic->addDescriptor(new BLE2902());
+  pTxCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY);
+  pTxCharacteristic->addDescriptor(new BLE2902());
   pService->start();
   pServer->getAdvertising()->start();
   WiFi.mode(WIFI_STA);
@@ -967,8 +1001,8 @@ else {
 }
 
 // ================= LOOP =================
-void loop() {
 
+void loop() {
   if (WiFi.status() == WL_CONNECTED) {
     static bool iniciado = false;
     if (!iniciado) {
@@ -980,84 +1014,30 @@ void loop() {
       iniciado = true;
       Serial.println("Servidor iniciado");
     }
-
     server.handleClient();
     digitalWrite(LED_PIN, HIGH);
-  }
-  else {
+  } else {
     digitalWrite(LED_PIN, (millis() / 500) % 2);
   }
 
-  // TEMPERATURA
   if (iniciarMedicaoTemperatura) {
     iniciarMedicaoTemperatura = false;
-    medirTemperatura(); 
+    medirTemperatura();
   }
 
-  // CARDIACO
   if (iniciarMedicaoCardiaca) {
     iniciarMedicaoCardiaca = false;
-    medirCardiaco(); // <-- Garanta que dentro dessa função você salve os valores em 'bpm' e 'spo2'
+    medirCardiaco();
   }
 
-  // -----------------------------------------------------------------
-  // ATUALIZAÇÃO DO DISPLAY (Sem travar o ESP32)
-  // -----------------------------------------------------------------
+  // Atualiza display com sinais vitais finais a cada segundo
   static unsigned long tempoAnteriorDisplay = 0;
   unsigned long tempoAtual = millis();
-
-
   if (tempoAtual - tempoAnteriorDisplay >= 1000) {
     tempoAnteriorDisplay = tempoAtual;
-   
-    atualizarDisplay(ultimaTemperatura, ultimoBPM, ultimoSpO2); 
+    atualizarDisplay(ultimaTemperatura, ultimoBPM, ultimoSpO2);
   }
 
   yield();
   delay(2);
 }
-
-void atualizarDisplay(float temp, int batimentos, int oxigenio) {
-  display.clearDisplay();
-  
-  // ---------------------------------------------------
-  
-  // ---------------------------------------------------
-  display.setTextSize(1);
-  display.setCursor(0, 0);
-  display.print("TEMPERATURA:");
-  
-  display.setTextSize(2); // Fonte maior para o valor
-  display.setCursor(10, 12);
-  display.print(temp, 1); // Mostra uma casa decimal
-  display.write(247);     // Símbolo de graus (°) em código ASCII
-  display.print("C");
-  
-  // Linha divisória para organizar visualmente o layout
-  display.drawFastHLine(0, 32, 128, SSD1306_WHITE);
-  
-  // ---------------------------------------------------
-  // Bloco 2: BPM e SpO2 (Juntos na parte inferior)
-  // ---------------------------------------------------
-  display.setTextSize(1);
-  display.setCursor(0, 38);
-  display.print("SINAIS VITAIS:");
-  
-  display.setTextSize(2); // Fonte maior para os valores
-  // Batimentos (BPM) à esquerda
-  display.setCursor(0, 50);
-  display.print(batimentos);
-  display.setTextSize(1);
-  display.print("bpm  ");
-  
- 
-  display.setTextSize(2);
-  display.setCursor(70, 50);
-  display.print(oxigenio);
-  display.setTextSize(1);
-  display.print("%");
-  
-
-  display.display();
-}
-
